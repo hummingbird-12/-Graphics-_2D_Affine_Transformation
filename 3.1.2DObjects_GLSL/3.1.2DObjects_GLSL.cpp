@@ -117,6 +117,8 @@ void draw_line(void) { // Draw line in its MC.
 	glBindVertexArray(0);
 }
 
+// MODEL : AIRPLANE
+
 #define AIRPLANE_BIG_WING 0
 #define AIRPLANE_SMALL_WING 1
 #define AIRPLANE_BODY 2
@@ -207,7 +209,8 @@ void draw_airplane() { // Draw airplane in its MC.
 	glBindVertexArray(0);
 }
 
-//shirt
+// MODEL : SHIRT
+
 #define SHIRT_LEFT_BODY 0
 #define SHIRT_RIGHT_BODY 1
 #define SHIRT_LEFT_COLLAR 2
@@ -309,7 +312,8 @@ void draw_shirt() {
 	glBindVertexArray(0);
 }
 
-//house
+// MODEL : HOUSE
+
 #define HOUSE_ROOF 0
 #define HOUSE_BODY 1
 #define HOUSE_CHIMNEY 2
@@ -381,7 +385,8 @@ void draw_house() {
 	glBindVertexArray(0);
 }
 
-//car
+// MODEL : CAR
+
 #define CAR_BODY 0
 #define CAR_FRAME 1
 #define CAR_WINDOW 2
@@ -469,7 +474,8 @@ void draw_car() {
 	glBindVertexArray(0);
 }
 
-//draw cocktail
+// MODEL : COCKTAIL
+
 #define COCKTAIL_NECK 0
 #define COCKTAIL_LIQUID 1
 #define COCKTAIL_REMAIN 2
@@ -541,7 +547,8 @@ void draw_cocktail() {
 	glBindVertexArray(0);
 }
 
-//draw car2
+// MODEL : CAR2
+
 #define CAR2_BODY 0
 #define CAR2_FRONT_WINDOW 1
 #define CAR2_BACK_WINDOW 2
@@ -629,7 +636,7 @@ void draw_car2() {
 	glBindVertexArray(0);
 }
 
-// ADDITIONAL OBJECTS
+// MODEL : HAT
 
 #define HAT_LEAF 0
 #define HAT_BODY 1
@@ -692,6 +699,8 @@ void draw_hat() {
 
 	glBindVertexArray(0);
 }
+
+// MODEL : CAKE
 
 #define CAKE_FIRE 0
 #define CAKE_CANDLE 1
@@ -762,6 +771,8 @@ void draw_cake() {
 
 	glBindVertexArray(0);
 }
+
+// MODEL : SWORD
 
 #define SWORD_BODY 0
 #define SWORD_BODY2 1
@@ -846,6 +857,8 @@ void draw_sword() {
 	glBindVertexArray(0);
 }
 
+
+// display function
 
 void display(void) {
 	int i;
