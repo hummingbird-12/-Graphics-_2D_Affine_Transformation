@@ -1048,7 +1048,7 @@ void display(void) {
 	}
 
 	// BIRD
-	ModelMatrix = glm::translate(glm::mat4(1.0f), glm::vec3(winBorderL + 100.0f, 0.0f, 0.0f));
+	ModelMatrix = glm::translate(glm::mat4(1.0f), glm::vec3(winBorderL + 150.0f, 0.0f, 0.0f));
 	if (bird_jumpClock) { // bird is jumping
 		if (bird_jumpClock >= BIRD_JUMP_DELAY / 2) { // ascending
 			bird_Ycor += bird_Ycor + 17.0f <= winBorderU ? 2.0f : 0.0f; // sky is the limit
