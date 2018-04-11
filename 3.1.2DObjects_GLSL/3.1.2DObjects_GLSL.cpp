@@ -1,5 +1,6 @@
 #include <stdio.h>
 #include <stdlib.h>
+#include <time.h>
 #include <GL/glew.h>
 #include <GL/freeglut.h>
 
@@ -129,6 +130,11 @@ void draw_line(void) { // Draw line in its MC.
 #define AIRPLANE_SIDEWINDER1 4
 #define AIRPLANE_SIDEWINDER2 5
 #define AIRPLANE_CENTER 6
+
+int airplane_clock;
+int airplane_appearDelay;
+float airplane_s_factor = 1.0f;
+
 GLfloat big_wing[6][2] = { { 0.0, 0.0 }, { -20.0, 15.0 }, { -20.0, 20.0 }, { 0.0, 23.0 }, { 20.0, 20.0 }, { 20.0, 15.0 } };
 GLfloat small_wing[6][2] = { { 0.0, -18.0 }, { -11.0, -12.0 }, { -12.0, -7.0 }, { 0.0, -10.0 }, { 12.0, -7.0 }, { 11.0, -12.0 } };
 GLfloat body[5][2] = { { 0.0, -25.0 }, { -6.0, 0.0 }, { -6.0, 22.0 }, { 6.0, 22.0 }, { 6.0, 0.0 } };
@@ -147,9 +153,6 @@ GLfloat airplane_color[7][3] = {
 };
 
 GLuint VBO_airplane, VAO_airplane;
-
-int airplane_clock = 0;
-float airplane_s_factor = 1.0f;
 
 void prepare_airplane() {
 	GLsizeiptr buffer_size = sizeof(big_wing)+sizeof(small_wing)+sizeof(body)+sizeof(back)
@@ -323,7 +326,9 @@ void draw_shirt() {
 #define HOUSE_DOOR 3
 #define HOUSE_WINDOW 4
 
-int house_clock = 0;
+int house_appearDelay;
+int house_clock;
+int house_cnt;
 
 GLfloat roof[3][2] = { { -12.0, 0.0 }, { 0.0, 12.0 }, { 12.0, 0.0 } };
 GLfloat house_body[4][2] = { { -12.0, -14.0 }, { -12.0, 0.0 }, { 12.0, 0.0 }, { 12.0, -14.0 } };
@@ -486,6 +491,10 @@ void draw_car() {
 #define COCKTAIL_REMAIN 2
 #define COCKTAIL_STRAW 3
 #define COCKTAIL_DECO 4
+
+int cocktail_clock;
+int cocktail_appearDelay;
+int cocktail_Xcor;
 
 GLfloat neck[6][2] = { { -6.0, -12.0 }, { -6.0, -11.0 }, { -1.0, 0.0 }, { 1.0, 0.0 }, { 6.0, -11.0 }, { 6.0, -12.0 } };
 GLfloat liquid[6][2] = { { -1.0, 0.0 }, { -9.0, 4.0 }, { -12.0, 7.0 }, { 12.0, 7.0 }, { 9.0, 4.0 }, { 1.0, 0.0 } };
@@ -1004,49 +1013,37 @@ void display(void) {
 	winBorderU = win_height / 2.0f;
 
 	groundLevel = winBorderD + 65.0f;
-	
-	/*
-	ModelMatrix = glm::mat4(1.0f);
-	ModelViewProjectionMatrix = ViewProjectionMatrix * ModelMatrix;
-	glUniformMatrix4fv(loc_ModelViewProjectionMatrix, 1, GL_FALSE, &ModelViewProjectionMatrix[0][0]);
-	draw_axes();
 
-	ModelMatrix = glm::translate(glm::mat4(1.0f), glm::vec3(-500.0f, 0.0f, 0.0f));
+	// COCKTAIL
+	ModelMatrix = glm::translate(glm::mat4(1.0f), glm::vec3(winBorderR - cocktail_clock, cocktail_Xcor, 0.0f));
+	ModelMatrix = glm::scale(ModelMatrix, glm::vec3(2.0f, 2.0f, 1.0f));
+	ModelMatrix = glm::rotate(ModelMatrix, (cocktail_clock + 360 % 360) * TO_RADIAN, glm::vec3(0.0f, 0.0f, 1.0f));
 	ModelViewProjectionMatrix = ViewProjectionMatrix * ModelMatrix;
 	glUniformMatrix4fv(loc_ModelViewProjectionMatrix, 1, GL_FALSE, &ModelViewProjectionMatrix[0][0]);
-	draw_airplane();
- 
-	ModelMatrix = glm::translate(glm::mat4(1.0f), glm::vec3(-300.0f, 0.0f, 0.0f));
-	ModelMatrix = glm::scale(ModelMatrix, glm::vec3(2.0f, 2.0f, 1.0f));
-	ModelViewProjectionMatrix = ViewProjectionMatrix * ModelMatrix;
-	glUniformMatrix4fv(loc_ModelViewProjectionMatrix, 1, GL_FALSE, &ModelViewProjectionMatrix[0][0]);
-	draw_shirt();
-	
-	ModelMatrix = glm::translate(glm::mat4(1.0f), glm::vec3(100.0f, 0.0f, 0.0f));
-	ModelMatrix = glm::scale(ModelMatrix, glm::vec3(2.0f, 2.0f, 1.0f));
-	ModelViewProjectionMatrix = ViewProjectionMatrix * ModelMatrix;
-	glUniformMatrix4fv(loc_ModelViewProjectionMatrix, 1, GL_FALSE, &ModelViewProjectionMatrix[0][0]); 
-	draw_car();
-	
-	ModelMatrix = glm::translate(glm::mat4(1.0f), glm::vec3(300.0f, 0.0f, 0.0f));
-	ModelMatrix = glm::scale(ModelMatrix, glm::vec3(2.0f, 2.0f, 1.0f));
-	ModelViewProjectionMatrix = ViewProjectionMatrix * ModelMatrix;
-	glUniformMatrix4fv(loc_ModelViewProjectionMatrix, 1, GL_FALSE, &ModelViewProjectionMatrix[0][0]); 
-	draw_cocktail();
-	
-	ModelMatrix = glm::translate(glm::mat4(1.0f), glm::vec3(500.0f, 0.0f, 0.0f));
-	ModelMatrix = glm::scale(ModelMatrix, glm::vec3(2.0f, 2.0f, 1.0f));
-	ModelViewProjectionMatrix = ViewProjectionMatrix * ModelMatrix;
-	glUniformMatrix4fv(loc_ModelViewProjectionMatrix, 1, GL_FALSE, &ModelViewProjectionMatrix[0][0]); 
-	draw_car2();
-	*/
+	if (!cocktail_appearDelay)
+		draw_cocktail();
 
+	// AIRPLANE
+	if(airplane_clock % 100 < 50) // downwards
+		ModelMatrix = glm::translate(glm::mat4(1.0f), glm::vec3(winBorderR - airplane_clock, winBorderU - (60.0f + (airplane_clock % 100)), 0.0f));
+	else // upwards
+		ModelMatrix = glm::translate(glm::mat4(1.0f), glm::vec3(winBorderR - airplane_clock, winBorderU - (160.0f - (airplane_clock % 100)), 0.0f));
+	ModelMatrix = glm::scale(ModelMatrix, glm::vec3(1.5f, 1.5f, 1.0f));
+	ModelMatrix = glm::rotate(ModelMatrix, -90.0f * TO_RADIAN, glm::vec3(0.0f, 0.0f, 1.0f));
+	ModelViewProjectionMatrix = ViewProjectionMatrix * ModelMatrix;
+	glUniformMatrix4fv(loc_ModelViewProjectionMatrix, 1, GL_FALSE, &ModelViewProjectionMatrix[0][0]);
+	if(!airplane_appearDelay)
+		draw_airplane();
+
+	// HOUSE
 	ModelMatrix = glm::translate(glm::mat4(1.0f), glm::vec3(winBorderR - house_clock, winBorderD + 93.0f, 0.0f));
 	ModelMatrix = glm::scale(ModelMatrix, glm::vec3(2.0f, 2.0f, 1.0f));
 	ModelViewProjectionMatrix = ViewProjectionMatrix * ModelMatrix;
 	glUniformMatrix4fv(loc_ModelViewProjectionMatrix, 1, GL_FALSE, &ModelViewProjectionMatrix[0][0]);
-	draw_house();
+	if(!house_appearDelay)
+		draw_house();
 
+	// BIRD
 	ModelMatrix = glm::translate(glm::mat4(1.0f), glm::vec3(winBorderL + 100.0f, 0.0f, 0.0f));
 	if (bird_jumpClock) { // bird is jumping
 		if (bird_jumpClock >= BIRD_JUMP_DELAY / 2) { // ascending
@@ -1072,6 +1069,8 @@ void display(void) {
 	glUniformMatrix4fv(loc_ModelViewProjectionMatrix, 1, GL_FALSE, &ModelViewProjectionMatrix[0][0]);
 	draw_bird();
 
+
+	// GROUND
 	ModelMatrix = glm::translate(glm::mat4(1.0f), glm::vec3(0.0f, winBorderD + 50.0f, 0.0f));
 	ModelMatrix = glm::scale(ModelMatrix, glm::vec3(win_width / 50.0f, 1.0f, 1.0f));
 	ModelViewProjectionMatrix = ViewProjectionMatrix * ModelMatrix;
@@ -1107,7 +1106,39 @@ void reshape(int width, int height) {
 }
 
 void timer(int value) {
-	house_clock = (house_clock + 3) % win_width;
+	// COCKTAIL
+	if (!cocktail_appearDelay && cocktail_clock + 3 >= win_width) {
+		cocktail_appearDelay = rand() % 100 + 70;
+		cocktail_clock = 0;
+		cocktail_Xcor = (rand() % (win_height / 3)) - (win_height / 6);
+	}
+	else if (cocktail_appearDelay)
+		cocktail_appearDelay--;
+	else
+		cocktail_clock = (cocktail_clock + 3) % win_width;
+
+	// HOUSE
+	if (!house_appearDelay && house_clock + 3 >= win_width) {
+		house_appearDelay = rand() % 100 + 30;
+		house_cnt = rand() % 5 + 1;
+		house_clock = 0;
+	}
+	else if (house_appearDelay)
+		house_appearDelay--;
+	else
+		house_clock = (house_clock + 3) % win_width;
+
+	// AIRPLANE
+	if (!airplane_appearDelay && airplane_clock + 3 >= win_width) {
+		airplane_appearDelay = rand() % 100 + 30;
+		airplane_clock = 0;
+	}
+	else if (airplane_appearDelay)
+		airplane_appearDelay--;
+	else
+		airplane_clock = (airplane_clock + 3) % win_width;
+
+	// BIRD
 	if (bird_jumpFlag) {
 		if (bird_jumpClock != BIRD_JUMP_DELAY)
 			bird_jumpClock = BIRD_JUMP_DELAY;
@@ -1117,6 +1148,7 @@ void timer(int value) {
 	}
 	else if(bird_jumpClock)
 		bird_jumpClock--;
+
 	glutPostRedisplay();
 	glutTimerFunc(10, timer, 0);
 }
@@ -1165,11 +1197,11 @@ void initialize_OpenGL(void) {
 void prepare_scene(void) {
 	//prepare_axes();
 	//prepare_line();
-	//prepare_airplane();
+	prepare_airplane();
 	//prepare_shirt();
 	prepare_house();
 	//prepare_car();
-	//prepare_cocktail();
+	prepare_cocktail();
 	//prepare_car2();
 	prepare_bird();
 	prepare_ground();
@@ -1218,6 +1250,18 @@ void main(int argc, char *argv[]) {
 	char messages[N_MESSAGE_LINES][256] = {
 		"    - Keys used: 'ESC' "
 	};
+
+	srand(time(NULL));
+
+	// initialize location clock for each object
+	airplane_clock = rand() % INIT_WIN_WIDTH;
+	house_clock = rand() % INIT_WIN_WIDTH;
+	cocktail_clock = 0;
+
+	// initialize house count
+	house_cnt = rand() % 5 + 1;
+
+	airplane_appearDelay = house_appearDelay = cocktail_appearDelay = 0;
 
 	glutInit (&argc, argv);
  	glutInitDisplayMode(GLUT_RGBA | GLUT_MULTISAMPLE);
