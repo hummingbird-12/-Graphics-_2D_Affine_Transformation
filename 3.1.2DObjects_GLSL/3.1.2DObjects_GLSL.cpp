@@ -329,6 +329,7 @@ void draw_shirt() {
 int house_appearDelay;
 int house_clock;
 int house_cnt;
+float house_offset[5] = { 2.0f };
 
 GLfloat roof[3][2] = { { -12.0, 0.0 }, { 0.0, 12.0 }, { 12.0, 0.0 } };
 GLfloat house_body[4][2] = { { -12.0, -14.0 }, { -12.0, 0.0 }, { 12.0, 0.0 }, { 12.0, -14.0 } };
@@ -1036,12 +1037,15 @@ void display(void) {
 		draw_airplane();
 
 	// HOUSE
-	ModelMatrix = glm::translate(glm::mat4(1.0f), glm::vec3(winBorderR - house_clock, winBorderD + 93.0f, 0.0f));
-	ModelMatrix = glm::scale(ModelMatrix, glm::vec3(2.0f, 2.0f, 1.0f));
-	ModelViewProjectionMatrix = ViewProjectionMatrix * ModelMatrix;
-	glUniformMatrix4fv(loc_ModelViewProjectionMatrix, 1, GL_FALSE, &ModelViewProjectionMatrix[0][0]);
-	if(!house_appearDelay)
-		draw_house();
+	for (i = 0; i < house_cnt; i++) {
+		int curOff = house_offset[i];
+		ModelMatrix = glm::translate(glm::mat4(1.0f), glm::vec3(winBorderR - house_clock + 120 * i, groundLevel + 14 * curOff, 0.0f));
+		ModelMatrix = glm::scale(ModelMatrix, glm::vec3(curOff, curOff, 1.0f));
+		ModelViewProjectionMatrix = ViewProjectionMatrix * ModelMatrix;
+		glUniformMatrix4fv(loc_ModelViewProjectionMatrix, 1, GL_FALSE, &ModelViewProjectionMatrix[0][0]);
+		if (!house_appearDelay)
+			draw_house();
+	}
 
 	// BIRD
 	ModelMatrix = glm::translate(glm::mat4(1.0f), glm::vec3(winBorderL + 100.0f, 0.0f, 0.0f));
@@ -1108,7 +1112,7 @@ void reshape(int width, int height) {
 void timer(int value) {
 	// COCKTAIL
 	if (!cocktail_appearDelay && cocktail_clock + 3 >= win_width) {
-		cocktail_appearDelay = rand() % 100 + 70;
+		cocktail_appearDelay = rand() % 500 + 70; // delay reappearance
 		cocktail_clock = 0;
 		cocktail_Xcor = (rand() % (win_height / 3)) - (win_height / 6);
 	}
@@ -1118,19 +1122,21 @@ void timer(int value) {
 		cocktail_clock = (cocktail_clock + 3) % win_width;
 
 	// HOUSE
-	if (!house_appearDelay && house_clock + 3 >= win_width) {
-		house_appearDelay = rand() % 100 + 30;
-		house_cnt = rand() % 5 + 1;
+	if (!house_appearDelay && house_clock + 3 >= win_width + 120 * 5) {
+		house_appearDelay = rand() % 100 + 30; // delay reappearance
 		house_clock = 0;
+		house_cnt = rand() % 5 + 1; // generate house count for new wave
+		for (int i = 0; i < house_cnt; i++)
+			house_offset[i] = rand() % 5 + 1; // size of each house in wave
 	}
 	else if (house_appearDelay)
 		house_appearDelay--;
 	else
-		house_clock = (house_clock + 3) % win_width;
+		house_clock = (house_clock + 3) % (win_width + 120 * 5);
 
 	// AIRPLANE
 	if (!airplane_appearDelay && airplane_clock + 3 >= win_width) {
-		airplane_appearDelay = rand() % 100 + 30;
+		airplane_appearDelay = rand() % 100 + 30; // delay reappearance
 		airplane_clock = 0;
 	}
 	else if (airplane_appearDelay)
