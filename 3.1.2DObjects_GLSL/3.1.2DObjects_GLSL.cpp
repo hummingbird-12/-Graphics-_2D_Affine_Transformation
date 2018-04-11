@@ -864,10 +864,16 @@ void draw_sword() {
 
 // MODEL : BIRD
 
+#define BIRD_JUMP_DELAY 50
+#define BIRD_ROTATE_ANGLE 70.0f
+
 #define BIRD_BODY 0
 #define BIRD_BEAK 1
 #define BIRD_EYE 2
 #define BIRD_PUPIL 3
+
+bool bird_jumpFlag = false;
+int bird_jumpClock = 0;
 
 GLfloat bird_body[4][2] = { { -15.0, -15.0 }, { -15.0, 15.0 }, { 15.0, 15.0 }, {15.0, -15.0} };
 GLfloat bird_beak[3][2] = { { 15.0, 7.0 }, { 15.0, -7.0 }, { 30.0, 0.0 } };
@@ -985,9 +991,19 @@ void draw_ground() {
 void display(void) {
 	int i;
 	float x, r, s, delx, delr, dels;
+	float winBorderR, winBorderD, winBorderL, winBorderU;
+	float groundLevel;
+	static float bird_Ycor = 0;
 	glm::mat4 ModelMatrix;
 
 	glClear(GL_COLOR_BUFFER_BIT);
+
+	winBorderL = -win_width / 2.0f;
+	winBorderR = win_width / 2.0f;
+	winBorderD = -win_height / 2.0f;
+	winBorderU = win_height / 2.0f;
+
+	groundLevel = winBorderD + 65.0f;
 	
 	/*
 	ModelMatrix = glm::mat4(1.0f);
@@ -1025,18 +1041,38 @@ void display(void) {
 	draw_car2();
 	*/
 
-	ModelMatrix = glm::translate(glm::mat4(1.0f), glm::vec3(win_width / 2.0f - house_clock, -win_height / 2.0f + 93.0f, 0.0f));
+	ModelMatrix = glm::translate(glm::mat4(1.0f), glm::vec3(winBorderR - house_clock, winBorderD + 93.0f, 0.0f));
 	ModelMatrix = glm::scale(ModelMatrix, glm::vec3(2.0f, 2.0f, 1.0f));
 	ModelViewProjectionMatrix = ViewProjectionMatrix * ModelMatrix;
 	glUniformMatrix4fv(loc_ModelViewProjectionMatrix, 1, GL_FALSE, &ModelViewProjectionMatrix[0][0]);
 	draw_house();
 
-	ModelMatrix = glm::mat4(1.0f);
+	ModelMatrix = glm::translate(glm::mat4(1.0f), glm::vec3(winBorderL + 100.0f, 0.0f, 0.0f));
+	if (bird_jumpClock) { // bird is jumping
+		if (bird_jumpClock >= BIRD_JUMP_DELAY / 2) { // ascending
+			bird_Ycor += bird_Ycor + 17.0f <= winBorderU ? 2.0f : 0.0f; // sky is the limit
+			ModelMatrix = glm::translate(ModelMatrix, glm::vec3(0.0f, bird_Ycor, 0.0f));
+			// smooth rotating upwards while ascending
+			ModelMatrix = glm::rotate(ModelMatrix, (BIRD_ROTATE_ANGLE - bird_jumpClock) * TO_RADIAN, glm::vec3(0.0f, 0.0f, 1.0f));
+		}
+		else { // descending
+			bird_Ycor -= bird_Ycor - 17.0f >= groundLevel ? 1.5f : 0.0f; // check ground level
+			ModelMatrix = glm::translate(ModelMatrix, glm::vec3(0.0f, bird_Ycor, 0.0f));
+			// smooth rotating downwards while descending
+			ModelMatrix = glm::rotate(ModelMatrix, (-BIRD_ROTATE_ANGLE + bird_jumpClock) * TO_RADIAN, glm::vec3(0.0f, 0.0f, 1.0f));
+		}
+	}
+	else { // bird is NOT jumping, so descend
+		bird_Ycor -= bird_Ycor - 17.0f >= groundLevel ? 1.5f : 0.0f; // check ground level
+		ModelMatrix = glm::translate(ModelMatrix, glm::vec3(0.0f, bird_Ycor, 0.0f));
+		// rotate downwards while descending
+		ModelMatrix = glm::rotate(ModelMatrix, -BIRD_ROTATE_ANGLE * TO_RADIAN, glm::vec3(0.0f, 0.0f, 1.0f));
+	}
 	ModelViewProjectionMatrix = ViewProjectionMatrix * ModelMatrix;
 	glUniformMatrix4fv(loc_ModelViewProjectionMatrix, 1, GL_FALSE, &ModelViewProjectionMatrix[0][0]);
 	draw_bird();
 
-	ModelMatrix = glm::translate(glm::mat4(1.0f), glm::vec3(0.0f, -win_height / 2.0f + 50.0f, 0.0f));
+	ModelMatrix = glm::translate(glm::mat4(1.0f), glm::vec3(0.0f, winBorderD + 50.0f, 0.0f));
 	ModelMatrix = glm::scale(ModelMatrix, glm::vec3(win_width / 50.0f, 1.0f, 1.0f));
 	ModelViewProjectionMatrix = ViewProjectionMatrix * ModelMatrix;
 	glUniformMatrix4fv(loc_ModelViewProjectionMatrix, 1, GL_FALSE, &ModelViewProjectionMatrix[0][0]);
@@ -1049,6 +1085,9 @@ void keyboard(unsigned char key, int x, int y) {
 	switch (key) {
 	case 27: // ESC key
 		glutLeaveMainLoop(); // Incur destuction callback for cleanups.
+		break;
+	case 32: // SPACE
+		bird_jumpFlag = true; // make bird jump
 		break;
 	}
 }
@@ -1069,6 +1108,15 @@ void reshape(int width, int height) {
 
 void timer(int value) {
 	house_clock = (house_clock + 3) % win_width;
+	if (bird_jumpFlag) {
+		if (bird_jumpClock != BIRD_JUMP_DELAY)
+			bird_jumpClock = BIRD_JUMP_DELAY;
+		else
+			bird_jumpClock--;
+		bird_jumpFlag = false;
+	}
+	else if(bird_jumpClock)
+		bird_jumpClock--;
 	glutPostRedisplay();
 	glutTimerFunc(10, timer, 0);
 }
@@ -1110,7 +1158,7 @@ void initialize_OpenGL(void) {
 	glEnable(GL_MULTISAMPLE); 
 	glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
 	
-	glClearColor(250 / 255.0f, 128 / 255.0f, 114 / 255.0f, 1.0f);
+	glClearColor( 60.0f / 255.0f, 230.0f / 255.0f, 230.0f / 255.0f, 1.0f);
 	ViewMatrix = glm::mat4(1.0f);
 }
 
