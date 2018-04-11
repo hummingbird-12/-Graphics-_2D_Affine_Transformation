@@ -870,8 +870,8 @@ GLfloat bird_eye[1][2] = { 7.0, 7.0 };
 GLfloat bird_pupil[1][2] = { 8.0, 7.0 };
 
 GLfloat bird_color[4][3] = {
-	{ 255.0f / 255.0f, 0 / 255.0f, 0 / 255.0f },
-	{ 255.0f / 255.0f, 200.0f / 255.0f, 0 / 255.0f },
+	{ 255.0f / 255.0f, 0.0f / 255.0f, 0.0f / 255.0f },
+	{ 255.0f / 255.0f, 200.0f / 255.0f, 0.0f / 255.0f },
 	{ 255.0f / 255.0f, 255.0f / 255.0f, 255.0f / 255.0f },
 	{ 0.0f / 255.0f, 0.0f / 255.0f, 0.0f / 255.0f }
 };
@@ -921,6 +921,56 @@ void draw_bird() {
 	glPointSize(4.0);
 	glDrawArrays(GL_POINTS, 8, 1);
 	glPointSize(1.0);
+
+	glBindVertexArray(0);
+}
+
+// MODEL : GROUND
+
+#define GROUND_EARTH 0
+#define GROUND_GRASS 1
+
+GLfloat ground_earth[4][2] = { { -50.0f, 0.0 }, { -50.0f, -50.0 }, { 50.0f, -50.0 }, { 50.0f, 0.0 } };
+GLfloat ground_grass[4][2] = { { -50.0f, 0.0 }, { 50.0f, 0.0 }, { 50.0f, 15.0 }, { -50.0f, 15.0 } };
+
+GLfloat ground_color[2][3] = {
+	{ 75.0f / 255.0f, 50.0f / 255.0f, 0.0f / 255.0f },
+	{ 80.0f / 255.0f, 150.0f / 255.0f, 50.0f / 255.0f }
+};
+
+GLuint VBO_ground, VAO_ground;
+void prepare_ground() {
+	GLsizeiptr buffer_size = sizeof(ground_earth) + sizeof(ground_grass);
+
+	// Initialize vertex buffer object.
+	glGenBuffers(1, &VBO_ground);
+
+	glBindBuffer(GL_ARRAY_BUFFER, VBO_ground);
+	glBufferData(GL_ARRAY_BUFFER, buffer_size, NULL, GL_STATIC_DRAW); // allocate buffer object memory
+
+	glBufferSubData(GL_ARRAY_BUFFER, 0, sizeof(ground_earth), ground_earth);
+	glBufferSubData(GL_ARRAY_BUFFER, sizeof(ground_earth), sizeof(ground_grass), ground_grass);
+
+	// Initialize vertex array object.
+	glGenVertexArrays(1, &VAO_ground);
+	glBindVertexArray(VAO_ground);
+
+	glBindBuffer(GL_ARRAY_BUFFER, VBO_ground);
+	glVertexAttribPointer(LOC_VERTEX, 2, GL_FLOAT, GL_FALSE, 0, BUFFER_OFFSET(0));
+
+	glEnableVertexAttribArray(0);
+	glBindBuffer(GL_ARRAY_BUFFER, 0);
+	glBindVertexArray(0);
+}
+
+void draw_ground() {
+	glBindVertexArray(VAO_ground);
+
+	glUniform3fv(loc_primitive_color, 1, ground_color[GROUND_EARTH]);
+	glDrawArrays(GL_TRIANGLE_FAN, 0, 4);
+
+	glUniform3fv(loc_primitive_color, 1, ground_color[GROUND_GRASS]);
+	glDrawArrays(GL_TRIANGLE_FAN, 4, 4);
 
 	glBindVertexArray(0);
 }
@@ -978,6 +1028,13 @@ void display(void) {
 	ModelViewProjectionMatrix = ViewProjectionMatrix * ModelMatrix;
 	glUniformMatrix4fv(loc_ModelViewProjectionMatrix, 1, GL_FALSE, &ModelViewProjectionMatrix[0][0]);
 	draw_bird();
+
+	//ModelMatrix = glm::mat4(1.0f);
+	ModelMatrix = glm::translate(glm::mat4(1.0f), glm::vec3(0.0f, -win_height / 2.0f + 50.0f, 0.0f));
+	ModelMatrix = glm::scale(ModelMatrix, glm::vec3(win_width / 50.0f, 1.0f, 1.0f));
+	ModelViewProjectionMatrix = ViewProjectionMatrix * ModelMatrix;
+	glUniformMatrix4fv(loc_ModelViewProjectionMatrix, 1, GL_FALSE, &ModelViewProjectionMatrix[0][0]);
+	draw_ground();
 
 	glFlush();	
 }   
@@ -1054,6 +1111,7 @@ void prepare_scene(void) {
 	prepare_cocktail();
 	prepare_car2();
 	prepare_bird();
+	prepare_ground();
 }
 
 void initialize_renderer(void) {
