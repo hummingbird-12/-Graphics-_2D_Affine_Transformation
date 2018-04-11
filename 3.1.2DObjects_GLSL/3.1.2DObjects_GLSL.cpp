@@ -25,7 +25,7 @@ glm::mat4 ViewMatrix, ProjectionMatrix, ViewProjectionMatrix;
 
 int win_width = INIT_WIN_WIDTH, win_height = INIT_WIN_HEIGHT; 
 float centerx = 0.0f, centery = 0.0f, rotate_angle = 0.0f;
-
+float groundLevel;
 
 // MODEL : AXES
 
@@ -326,10 +326,12 @@ void draw_shirt() {
 #define HOUSE_DOOR 3
 #define HOUSE_WINDOW 4
 
+#define MAX_HOUSE_CNT 10
+
 int house_appearDelay;
 int house_clock;
 int house_cnt;
-float house_offset[5] = { 2.0f };
+float house_offset[MAX_HOUSE_CNT] = { 2.0f };
 
 GLfloat roof[3][2] = { { -12.0, 0.0 }, { 0.0, 12.0 }, { 12.0, 0.0 } };
 GLfloat house_body[4][2] = { { -12.0, -14.0 }, { -12.0, 0.0 }, { 12.0, 0.0 }, { 12.0, -14.0 } };
@@ -571,6 +573,10 @@ void draw_cocktail() {
 #define CAR2_BACK_WHEEL 4
 #define CAR2_LIGHT1 5
 #define CAR2_LIGHT2 6
+
+int car2_clock;
+float car2_Ycor = 0.0f;
+bool car2_fallingFlag = false;
 
 GLfloat car2_body[8][2] = { { -18.0, -7.0 }, { -18.0, 0.0 }, { -13.0, 0.0 }, { -10.0, 8.0 }, { 10.0, 8.0 }, { 13.0, 0.0 }, { 18.0, 0.0 }, { 18.0, -7.0 } };
 GLfloat car2_front_window[4][2] = { { -10.0, 0.0 }, { -8.0, 6.0 }, { -2.0, 6.0 }, { -2.0, 0.0 } };
@@ -1002,8 +1008,8 @@ void display(void) {
 	int i;
 	float x, r, s, delx, delr, dels;
 	float winBorderR, winBorderD, winBorderL, winBorderU;
-	float groundLevel;
 	static float bird_Ycor = 0;
+	static float airplane_Xcor = win_width / 2.0f;
 	glm::mat4 ModelMatrix;
 
 	glClear(GL_COLOR_BUFFER_BIT);
@@ -1033,8 +1039,17 @@ void display(void) {
 	ModelMatrix = glm::rotate(ModelMatrix, -90.0f * TO_RADIAN, glm::vec3(0.0f, 0.0f, 1.0f));
 	ModelViewProjectionMatrix = ViewProjectionMatrix * ModelMatrix;
 	glUniformMatrix4fv(loc_ModelViewProjectionMatrix, 1, GL_FALSE, &ModelViewProjectionMatrix[0][0]);
-	if(!airplane_appearDelay)
+	if (!airplane_appearDelay) {
 		draw_airplane();
+		airplane_Xcor = winBorderR - airplane_clock;
+	}
+	
+	// CAR (SIDE VIEW)
+	ModelMatrix = glm::scale(ModelMatrix, glm::vec3(1.5f, 1.5f, 1.0f));
+	ModelMatrix = glm::rotate(ModelMatrix, -90.0f * TO_RADIAN, glm::vec3(0.0f, 0.0f, 1.0f));
+	ModelViewProjectionMatrix = ViewProjectionMatrix * ModelMatrix;
+	glUniformMatrix4fv(loc_ModelViewProjectionMatrix, 1, GL_FALSE, &ModelViewProjectionMatrix[0][0]);
+	//draw_car2();
 
 	// HOUSE
 	for (i = 0; i < house_cnt; i++) {
@@ -1122,17 +1137,17 @@ void timer(int value) {
 		cocktail_clock = (cocktail_clock + 3) % win_width;
 
 	// HOUSE
-	if (!house_appearDelay && house_clock + 3 >= win_width + 120 * 5) {
+	if (!house_appearDelay && house_clock + 3 >= win_width + 120 * MAX_HOUSE_CNT) {
 		house_appearDelay = rand() % 100 + 30; // delay reappearance
 		house_clock = 0;
-		house_cnt = rand() % 5 + 1; // generate house count for new wave
+		house_cnt = rand() % MAX_HOUSE_CNT + 1; // generate house count for new wave
 		for (int i = 0; i < house_cnt; i++)
 			house_offset[i] = rand() % 5 + 1; // size of each house in wave
 	}
 	else if (house_appearDelay)
 		house_appearDelay--;
 	else
-		house_clock = (house_clock + 3) % (win_width + 120 * 5);
+		house_clock = (house_clock + 3) % (win_width + 120 * MAX_HOUSE_CNT);
 
 	// AIRPLANE
 	if (!airplane_appearDelay && airplane_clock + 3 >= win_width) {
@@ -1143,6 +1158,17 @@ void timer(int value) {
 		airplane_appearDelay--;
 	else
 		airplane_clock = (airplane_clock + 3) % win_width;
+	/*
+	// CAR2
+	if (car2_fallingFlag && car2_clock + 3 >= win_width) {
+		car2_appearDelay = rand() % 100 + 30; // delay reappearance
+		car2_clock = 0;
+	}
+	else if (car2_appearDelay)
+		car2_appearDelay--;
+	else
+		car2_clock = (car2_clock + 3) % win_width;
+		*/
 
 	// BIRD
 	if (bird_jumpFlag) {
@@ -1208,7 +1234,7 @@ void prepare_scene(void) {
 	prepare_house();
 	//prepare_car();
 	prepare_cocktail();
-	//prepare_car2();
+	prepare_car2();
 	prepare_bird();
 	prepare_ground();
 }
@@ -1262,7 +1288,7 @@ void main(int argc, char *argv[]) {
 	// initialize location clock for each object
 	airplane_clock = rand() % INIT_WIN_WIDTH;
 	house_clock = rand() % INIT_WIN_WIDTH;
-	cocktail_clock = 0;
+	cocktail_clock = car2_clock = 0;
 
 	// initialize house count
 	house_cnt = rand() % 5 + 1;
