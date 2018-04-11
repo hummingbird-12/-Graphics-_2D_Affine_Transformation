@@ -19,7 +19,10 @@ glm::mat4 ViewMatrix, ProjectionMatrix, ViewProjectionMatrix;
 
 #define LOC_VERTEX 0
 
-int win_width = 0, win_height = 0; 
+#define INIT_WIN_WIDTH 1200
+#define INIT_WIN_HEIGHT 600
+
+int win_width = INIT_WIN_WIDTH, win_height = INIT_WIN_HEIGHT; 
 float centerx = 0.0f, centery = 0.0f, rotate_angle = 0.0f;
 
 
@@ -319,6 +322,8 @@ void draw_shirt() {
 #define HOUSE_CHIMNEY 2
 #define HOUSE_DOOR 3
 #define HOUSE_WINDOW 4
+
+int house_clock = 0;
 
 GLfloat roof[3][2] = { { -12.0, 0.0 }, { 0.0, 12.0 }, { 12.0, 0.0 } };
 GLfloat house_body[4][2] = { { -12.0, -14.0 }, { -12.0, 0.0 }, { 12.0, 0.0 }, { 12.0, -14.0 } };
@@ -984,6 +989,7 @@ void display(void) {
 
 	glClear(GL_COLOR_BUFFER_BIT);
 	
+	/*
 	ModelMatrix = glm::mat4(1.0f);
 	ModelViewProjectionMatrix = ViewProjectionMatrix * ModelMatrix;
 	glUniformMatrix4fv(loc_ModelViewProjectionMatrix, 1, GL_FALSE, &ModelViewProjectionMatrix[0][0]);
@@ -999,12 +1005,6 @@ void display(void) {
 	ModelViewProjectionMatrix = ViewProjectionMatrix * ModelMatrix;
 	glUniformMatrix4fv(loc_ModelViewProjectionMatrix, 1, GL_FALSE, &ModelViewProjectionMatrix[0][0]);
 	draw_shirt();
-
-	ModelMatrix = glm::translate(glm::mat4(1.0f), glm::vec3(-100.0f, 0.0f, 0.0f));
-	ModelMatrix = glm::scale(ModelMatrix, glm::vec3(2.0f, 2.0f, 1.0f));
-	ModelViewProjectionMatrix = ViewProjectionMatrix * ModelMatrix;
-	glUniformMatrix4fv(loc_ModelViewProjectionMatrix, 1, GL_FALSE, &ModelViewProjectionMatrix[0][0]);
-	draw_house();
 	
 	ModelMatrix = glm::translate(glm::mat4(1.0f), glm::vec3(100.0f, 0.0f, 0.0f));
 	ModelMatrix = glm::scale(ModelMatrix, glm::vec3(2.0f, 2.0f, 1.0f));
@@ -1023,13 +1023,19 @@ void display(void) {
 	ModelViewProjectionMatrix = ViewProjectionMatrix * ModelMatrix;
 	glUniformMatrix4fv(loc_ModelViewProjectionMatrix, 1, GL_FALSE, &ModelViewProjectionMatrix[0][0]); 
 	draw_car2();
+	*/
+
+	ModelMatrix = glm::translate(glm::mat4(1.0f), glm::vec3(win_width / 2.0f - house_clock, -win_height / 2.0f + 93.0f, 0.0f));
+	ModelMatrix = glm::scale(ModelMatrix, glm::vec3(2.0f, 2.0f, 1.0f));
+	ModelViewProjectionMatrix = ViewProjectionMatrix * ModelMatrix;
+	glUniformMatrix4fv(loc_ModelViewProjectionMatrix, 1, GL_FALSE, &ModelViewProjectionMatrix[0][0]);
+	draw_house();
 
 	ModelMatrix = glm::mat4(1.0f);
 	ModelViewProjectionMatrix = ViewProjectionMatrix * ModelMatrix;
 	glUniformMatrix4fv(loc_ModelViewProjectionMatrix, 1, GL_FALSE, &ModelViewProjectionMatrix[0][0]);
 	draw_bird();
 
-	//ModelMatrix = glm::mat4(1.0f);
 	ModelMatrix = glm::translate(glm::mat4(1.0f), glm::vec3(0.0f, -win_height / 2.0f + 50.0f, 0.0f));
 	ModelMatrix = glm::scale(ModelMatrix, glm::vec3(win_width / 50.0f, 1.0f, 1.0f));
 	ModelViewProjectionMatrix = ViewProjectionMatrix * ModelMatrix;
@@ -1061,6 +1067,12 @@ void reshape(int width, int height) {
 	glutPostRedisplay();
 }
 
+void timer(int value) {
+	house_clock = (house_clock + 3) % win_width;
+	glutPostRedisplay();
+	glutTimerFunc(10, timer, 0);
+}
+
 void cleanup(void) {
 	glDeleteVertexArrays(1, &VAO_axes);
 	glDeleteBuffers(1, &VBO_axes);
@@ -1076,6 +1088,7 @@ void register_callbacks(void) {
 	glutDisplayFunc(display);
 	glutKeyboardFunc(keyboard);
 	glutReshapeFunc(reshape);
+	glutTimerFunc(10, timer, 0);
 	glutCloseFunc(cleanup);
 }
 
@@ -1102,14 +1115,14 @@ void initialize_OpenGL(void) {
 }
 
 void prepare_scene(void) {
-	prepare_axes();
-	prepare_line();
-	prepare_airplane();
-	prepare_shirt();
+	//prepare_axes();
+	//prepare_line();
+	//prepare_airplane();
+	//prepare_shirt();
 	prepare_house();
-	prepare_car();
-	prepare_cocktail();
-	prepare_car2();
+	//prepare_car();
+	//prepare_cocktail();
+	//prepare_car2();
 	prepare_bird();
 	prepare_ground();
 }
@@ -1160,7 +1173,7 @@ void main(int argc, char *argv[]) {
 
 	glutInit (&argc, argv);
  	glutInitDisplayMode(GLUT_RGBA | GLUT_MULTISAMPLE);
-	glutInitWindowSize (1200, 600);
+	glutInitWindowSize (INIT_WIN_WIDTH, INIT_WIN_HEIGHT);
 	glutInitContextVersion(4, 0);
 	glutInitContextProfile(GLUT_CORE_PROFILE);
 	glutCreateWindow(program_name);
