@@ -5,6 +5,11 @@ VisualStudioVersion = 15.0.27130.0
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "3.1.2DObjects_GLSL", "3.1.2DObjects_GLSL\3.1.2DObjects_GLSL.vcxproj", "{AE9650AD-9ADF-4D9D-961C-2C71AF2856A4}"
 EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Solution Items", "Solution Items", "{F915D6BE-48DE-4D0B-967A-82024B6039BD}"
+	ProjectSection(SolutionItems) = preProject
+		README.md = README.md
+	EndProjectSection
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|x64 = Debug|x64
