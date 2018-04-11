@@ -20,106 +20,13 @@ glm::mat4 ViewMatrix, ProjectionMatrix, ViewProjectionMatrix;
 
 #define LOC_VERTEX 0
 
-#define INIT_WIN_WIDTH 1200
+#define INIT_WIN_WIDTH 1000
 #define INIT_WIN_HEIGHT 600
 
 int win_width = INIT_WIN_WIDTH, win_height = INIT_WIN_HEIGHT; 
 float centerx = 0.0f, centery = 0.0f, rotate_angle = 0.0f;
+float winBorderR, winBorderD, winBorderL, winBorderU;
 float groundLevel;
-
-// MODEL : AXES
-
-GLfloat axes[4][2];
-GLfloat axes_color[3] = { 0.0f, 0.0f, 0.0f };
-GLuint VBO_axes, VAO_axes;
-
-void prepare_axes(void) { // Draw axes in their MC.
-	axes[0][0] = -win_width / 2.5f; axes[0][1] = 0.0f;
-	axes[1][0] = win_width / 2.5f; axes[1][1] = 0.0f;
-	axes[2][0] = 0.0f; axes[2][1] = -win_height / 2.5f;
-	axes[3][0] = 0.0f; axes[3][1] = win_height / 2.5f;
-
-	// Initialize vertex buffer object.
-	glGenBuffers(1, &VBO_axes);
-
-	glBindBuffer(GL_ARRAY_BUFFER, VBO_axes);
-	glBufferData(GL_ARRAY_BUFFER, sizeof(axes), axes, GL_STATIC_DRAW);
-
-	// Initialize vertex array object.
-	glGenVertexArrays(1, &VAO_axes);
-	glBindVertexArray(VAO_axes);
-
-	glBindBuffer(GL_ARRAY_BUFFER, VBO_axes);
-	glVertexAttribPointer(LOC_VERTEX, 2, GL_FLOAT, GL_FALSE, 0, BUFFER_OFFSET(0));
-
-	glEnableVertexAttribArray(0);
-	glBindBuffer(GL_ARRAY_BUFFER, 0);
-	glBindVertexArray(0);
-}
-
-void update_axes(void) {
-	axes[0][0] = -win_width / 2.25f; axes[1][0] = win_width / 2.25f; 
-	axes[2][1] = -win_height / 2.25f;
-	axes[3][1] = win_height / 2.25f;
-
-	glBindBuffer(GL_ARRAY_BUFFER, VBO_axes);
-	glBufferData(GL_ARRAY_BUFFER, sizeof(axes), axes, GL_STATIC_DRAW);
-	glBindBuffer(GL_ARRAY_BUFFER, 0);
-}
-
-void draw_axes(void) {
-	glUniform3fv(loc_primitive_color, 1, axes_color);
-	glBindVertexArray(VAO_axes);
-	glDrawArrays(GL_LINES, 0, 4);
-	glBindVertexArray(0);
-}
-
-GLfloat line[2][2];
-GLfloat line_color[3] = { 1.0f, 0.0f, 0.0f };
-GLuint VBO_line, VAO_line;
-
-void prepare_line(void) { 	// y = x - win_height/4
-	line[0][0] = (1.0f / 4.0f - 1.0f / 2.5f)*win_height; 
-	line[0][1] = (1.0f / 4.0f - 1.0f / 2.5f)*win_height - win_height / 4.0f;
-	line[1][0] = win_width / 2.5f; 
-	line[1][1] = win_width / 2.5f - win_height / 4.0f;
-
-	// Initialize vertex buffer object.
-	glGenBuffers(1, &VBO_line);
-
-	glBindBuffer(GL_ARRAY_BUFFER, VBO_line);
-	glBufferData(GL_ARRAY_BUFFER, sizeof(line), line, GL_STATIC_DRAW);
-
-	// Initialize vertex array object.
-	glGenVertexArrays(1, &VAO_line);
-	glBindVertexArray(VAO_line);
-
-	glBindBuffer(GL_ARRAY_BUFFER, VBO_line);
-	glVertexAttribPointer(LOC_VERTEX, 2, GL_FLOAT, GL_FALSE, 0, BUFFER_OFFSET(0));
-
-	glEnableVertexAttribArray(0);
-	glBindBuffer(GL_ARRAY_BUFFER, 0);
-	glBindVertexArray(0);
-}
-
-void update_line(void) { 	// y = x - win_height/4
-	line[0][0] = (1.0f / 4.0f - 1.0f / 2.5f)*win_height; 
-	line[0][1] = (1.0f / 4.0f - 1.0f / 2.5f)*win_height - win_height / 4.0f;
-	line[1][0] = win_width / 2.5f; 
-	line[1][1] = win_width / 2.5f - win_height / 4.0f;
-
-	glBindBuffer(GL_ARRAY_BUFFER, VBO_line);
-	glBufferData(GL_ARRAY_BUFFER, sizeof(line), line, GL_STATIC_DRAW);
-	glBindBuffer(GL_ARRAY_BUFFER, 0);
-}
-
-void draw_line(void) { // Draw line in its MC.
-	// y = x - win_height/4
-	glUniform3fv(loc_primitive_color, 1, line_color);
-	glBindVertexArray(VAO_line);
-	glDrawArrays(GL_LINES, 0, 2);
-	glBindVertexArray(0);
-}
 
 // MODEL : AIRPLANE
 
@@ -131,6 +38,7 @@ void draw_line(void) { // Draw line in its MC.
 #define AIRPLANE_SIDEWINDER2 5
 #define AIRPLANE_CENTER 6
 
+float airplane_Xcor = win_width / 2.0f;
 int airplane_clock;
 int airplane_appearDelay;
 float airplane_s_factor = 1.0f;
@@ -215,109 +123,6 @@ void draw_airplane() { // Draw airplane in its MC.
 	glBindVertexArray(0);
 }
 
-// MODEL : SHIRT
-
-#define SHIRT_LEFT_BODY 0
-#define SHIRT_RIGHT_BODY 1
-#define SHIRT_LEFT_COLLAR 2
-#define SHIRT_RIGHT_COLLAR 3
-#define SHIRT_FRONT_POCKET 4
-#define SHIRT_BUTTON1 5
-#define SHIRT_BUTTON2 6
-#define SHIRT_BUTTON3 7
-#define SHIRT_BUTTON4 8
-GLfloat left_body[6][2] = { { 0.0, -9.0 }, { -8.0, -9.0 }, { -11.0, 8.0 }, { -6.0, 10.0 }, { -3.0, 7.0 }, { 0.0, 9.0 } };
-GLfloat right_body[6][2] = { { 0.0, -9.0 }, { 0.0, 9.0 }, { 3.0, 7.0 }, { 6.0, 10.0 }, { 11.0, 8.0 }, { 8.0, -9.0 } };
-GLfloat left_collar[4][2] = { { 0.0, 9.0 }, { -3.0, 7.0 }, { -6.0, 10.0 }, { -4.0, 11.0 } };
-GLfloat right_collar[4][2] = { { 0.0, 9.0 }, { 4.0, 11.0 }, { 6.0, 10.0 }, { 3.0, 7.0 } };
-GLfloat front_pocket[6][2] = { { 5.0, 0.0 }, { 4.0, 1.0 }, { 4.0, 3.0 }, { 7.0, 3.0 }, { 7.0, 1.0 }, { 6.0, 0.0 } };
-GLfloat button1[3][2] = { { -1.0, 6.0 }, { 1.0, 6.0 }, { 0.0, 5.0 } };
-GLfloat button2[3][2] = { { -1.0, 3.0 }, { 1.0, 3.0 }, { 0.0, 2.0 } };
-GLfloat button3[3][2] = { { -1.0, 0.0 }, { 1.0, 0.0 }, { 0.0, -1.0 } };
-GLfloat button4[3][2] = { { -1.0, -3.0 }, { 1.0, -3.0 }, { 0.0, -4.0 } };
-
-GLfloat shirt_color[9][3] = {
-	{ 255 / 255.0f, 255 / 255.0f, 255 / 255.0f },
-	{ 255 / 255.0f, 255 / 255.0f, 255 / 255.0f },
-	{ 206 / 255.0f, 173 / 255.0f, 184 / 255.0f },
-	{ 206 / 255.0f, 173 / 255.0f, 184 / 255.0f },
-	{ 206 / 255.0f, 173 / 255.0f, 184 / 255.0f },
-	{ 206 / 255.0f, 173 / 255.0f, 184 / 255.0f },
-	{ 206 / 255.0f, 173 / 255.0f, 184 / 255.0f },
-	{ 206 / 255.0f, 173 / 255.0f, 184 / 255.0f },
-	{ 206 / 255.0f, 173 / 255.0f, 184 / 255.0f }
-};
-
-GLuint VBO_shirt, VAO_shirt;
-void prepare_shirt() {
-	GLsizeiptr buffer_size = sizeof(left_body)+sizeof(right_body)+sizeof(left_collar)+sizeof(right_collar)
-		+sizeof(front_pocket)+sizeof(button1)+sizeof(button2)+sizeof(button3)+sizeof(button4);
-
-	// Initialize vertex buffer object.
-	glGenBuffers(1, &VBO_shirt);
-
-	glBindBuffer(GL_ARRAY_BUFFER, VBO_shirt);
-	glBufferData(GL_ARRAY_BUFFER, buffer_size, NULL, GL_STATIC_DRAW); // allocate buffer object memory
-
-	glBufferSubData(GL_ARRAY_BUFFER, 0, sizeof(left_body), left_body);
-	glBufferSubData(GL_ARRAY_BUFFER, sizeof(left_body), sizeof(right_body), right_body);
-	glBufferSubData(GL_ARRAY_BUFFER, sizeof(left_body)+sizeof(right_body), sizeof(left_collar), left_collar);
-	glBufferSubData(GL_ARRAY_BUFFER, sizeof(left_body)+sizeof(right_body)+sizeof(left_collar), sizeof(right_collar), right_collar);
-	glBufferSubData(GL_ARRAY_BUFFER, sizeof(left_body)+sizeof(right_body)+sizeof(left_collar)+sizeof(right_collar),
-		sizeof(front_pocket), front_pocket);
-	glBufferSubData(GL_ARRAY_BUFFER, sizeof(left_body)+sizeof(right_body)+sizeof(left_collar)+sizeof(right_collar)
-		+sizeof(front_pocket), sizeof(button1), button1);
-	glBufferSubData(GL_ARRAY_BUFFER, sizeof(left_body)+sizeof(right_body)+sizeof(left_collar)+sizeof(right_collar)
-		+sizeof(front_pocket)+sizeof(button1), sizeof(button2), button2);
-	glBufferSubData(GL_ARRAY_BUFFER, sizeof(left_body)+sizeof(right_body)+sizeof(left_collar)+sizeof(right_collar)
-		+sizeof(front_pocket)+sizeof(button1)+sizeof(button2), sizeof(button3), button3);
-	glBufferSubData(GL_ARRAY_BUFFER, sizeof(left_body)+sizeof(right_body)+sizeof(left_collar)+sizeof(right_collar)
-		+sizeof(front_pocket)+sizeof(button1)+sizeof(button2)+sizeof(button3), sizeof(button4), button4);
-
-	// Initialize vertex array object.
-	glGenVertexArrays(1, &VAO_shirt);
-	glBindVertexArray(VAO_shirt);
-
-	glBindBuffer(GL_ARRAY_BUFFER, VBO_shirt);
-	glVertexAttribPointer(LOC_VERTEX, 2, GL_FLOAT, GL_FALSE, 0, BUFFER_OFFSET(0));
-
-	glEnableVertexAttribArray(0);
-	glBindBuffer(GL_ARRAY_BUFFER, 0);
-	glBindVertexArray(0);
-}
-
-void draw_shirt() {
-	glBindVertexArray(VAO_shirt);
-
-	glUniform3fv(loc_primitive_color, 1, shirt_color[SHIRT_LEFT_BODY]);
-	glDrawArrays(GL_TRIANGLE_FAN, 0, 6);
-
-	glUniform3fv(loc_primitive_color, 1, shirt_color[SHIRT_RIGHT_BODY]);
-	glDrawArrays(GL_TRIANGLE_FAN, 6, 6);
-
-	glUniform3fv(loc_primitive_color, 1, shirt_color[SHIRT_LEFT_COLLAR]);
-	glDrawArrays(GL_TRIANGLE_FAN, 12, 4);
-
-	glUniform3fv(loc_primitive_color, 1, shirt_color[SHIRT_RIGHT_COLLAR]);
-	glDrawArrays(GL_TRIANGLE_FAN, 16, 4);
-
-	glUniform3fv(loc_primitive_color, 1, shirt_color[SHIRT_FRONT_POCKET]);
-	glDrawArrays(GL_TRIANGLE_FAN, 20, 6);
-
-	glUniform3fv(loc_primitive_color, 1, shirt_color[SHIRT_BUTTON1]);
-	glDrawArrays(GL_TRIANGLE_FAN, 26, 3);
-
-	glUniform3fv(loc_primitive_color, 1, shirt_color[SHIRT_BUTTON2]);
-	glDrawArrays(GL_TRIANGLE_FAN, 29, 3);
-
-	glUniform3fv(loc_primitive_color, 1, shirt_color[SHIRT_BUTTON3]);
-	glDrawArrays(GL_TRIANGLE_FAN, 32, 3);
-
-	glUniform3fv(loc_primitive_color, 1, shirt_color[SHIRT_BUTTON4]);
-	glDrawArrays(GL_TRIANGLE_FAN, 35, 3);
-	glBindVertexArray(0);
-}
-
 // MODEL : HOUSE
 
 #define HOUSE_ROOF 0
@@ -394,95 +199,6 @@ void draw_house() {
 
 	glUniform3fv(loc_primitive_color, 1, house_color[HOUSE_WINDOW]);
 	glDrawArrays(GL_TRIANGLE_FAN, 15, 4);
-
-	glBindVertexArray(0);
-}
-
-// MODEL : CAR
-
-#define CAR_BODY 0
-#define CAR_FRAME 1
-#define CAR_WINDOW 2
-#define CAR_LEFT_LIGHT 3
-#define CAR_RIGHT_LIGHT 4
-#define CAR_LEFT_WHEEL 5
-#define CAR_RIGHT_WHEEL 6
-
-GLfloat car_body[4][2] = { { -16.0, -8.0 }, { -16.0, 0.0 }, { 16.0, 0.0 }, { 16.0, -8.0 } };
-GLfloat car_frame[4][2] = { { -10.0, 0.0 }, { -10.0, 10.0 }, { 10.0, 10.0 }, { 10.0, 0.0 } };
-GLfloat car_window[4][2] = { { -8.0, 0.0 }, { -8.0, 8.0 }, { 8.0, 8.0 }, { 8.0, 0.0 } };
-GLfloat car_left_light[4][2] = { { -9.0, -6.0 }, { -10.0, -5.0 }, { -9.0, -4.0 }, { -8.0, -5.0 } };
-GLfloat car_right_light[4][2] = { { 9.0, -6.0 }, { 8.0, -5.0 }, { 9.0, -4.0 }, { 10.0, -5.0 } };
-GLfloat car_left_wheel[4][2] = { { -10.0, -12.0 }, { -10.0, -8.0 }, { -6.0, -8.0 }, { -6.0, -12.0 } };
-GLfloat car_right_wheel[4][2] = { { 6.0, -12.0 }, { 6.0, -8.0 }, { 10.0, -8.0 }, { 10.0, -12.0 } };
-
-GLfloat car_color[7][3] = {
-	{ 0 / 255.0f, 149 / 255.0f, 159 / 255.0f },
-	{ 0 / 255.0f, 149 / 255.0f, 159 / 255.0f },
-	{ 216 / 255.0f, 208 / 255.0f, 174 / 255.0f },
-	{ 249 / 255.0f, 244 / 255.0f, 0 / 255.0f },
-	{ 249 / 255.0f, 244 / 255.0f, 0 / 255.0f },
-	{ 21 / 255.0f, 30 / 255.0f, 26 / 255.0f },
-	{ 21 / 255.0f, 30 / 255.0f, 26 / 255.0f }
-};
-
-GLuint VBO_car, VAO_car;
-void prepare_car() {
-	GLsizeiptr buffer_size = sizeof(car_body)+sizeof(car_frame)+sizeof(car_window)+sizeof(car_left_light)
-		+sizeof(car_right_light)+sizeof(car_left_wheel)+sizeof(car_right_wheel);
-
-	// Initialize vertex buffer object.
-	glGenBuffers(1, &VBO_car);
-
-	glBindBuffer(GL_ARRAY_BUFFER, VBO_car);
-	glBufferData(GL_ARRAY_BUFFER, buffer_size, NULL, GL_STATIC_DRAW); // allocate buffer object memory
-
-	glBufferSubData(GL_ARRAY_BUFFER, 0, sizeof(car_body), car_body);
-	glBufferSubData(GL_ARRAY_BUFFER, sizeof(car_body), sizeof(car_frame), car_frame);
-	glBufferSubData(GL_ARRAY_BUFFER, sizeof(car_body)+sizeof(car_frame), sizeof(car_window), car_window);
-	glBufferSubData(GL_ARRAY_BUFFER, sizeof(car_body)+sizeof(car_frame)+sizeof(car_window), sizeof(car_left_light), car_left_light);
-	glBufferSubData(GL_ARRAY_BUFFER, sizeof(car_body)+sizeof(car_frame)+sizeof(car_window)+sizeof(car_left_light),
-		sizeof(car_right_light), car_right_light);
-	glBufferSubData(GL_ARRAY_BUFFER, sizeof(car_body)+sizeof(car_frame)+sizeof(car_window)+sizeof(car_left_light)
-		+sizeof(car_right_light), sizeof(car_left_wheel), car_left_wheel);
-	glBufferSubData(GL_ARRAY_BUFFER, sizeof(car_body)+sizeof(car_frame)+sizeof(car_window)+sizeof(car_left_light)
-		+sizeof(car_right_light)+sizeof(car_left_wheel), sizeof(car_right_wheel), car_right_wheel);
-
-	// Initialize vertex array object.
-	glGenVertexArrays(1, &VAO_car);
-	glBindVertexArray(VAO_car);
-
-	glBindBuffer(GL_ARRAY_BUFFER, VBO_car);
-	glVertexAttribPointer(LOC_VERTEX, 2, GL_FLOAT, GL_FALSE, 0, BUFFER_OFFSET(0));
-
-	glEnableVertexAttribArray(0);
-	glBindBuffer(GL_ARRAY_BUFFER, 0);
-	glBindVertexArray(0);
-}
-
-void draw_car() {
-	glBindVertexArray(VAO_car);
-
-	glUniform3fv(loc_primitive_color, 1, car_color[CAR_BODY]);
-	glDrawArrays(GL_TRIANGLE_FAN, 0, 4);
-
-	glUniform3fv(loc_primitive_color, 1, car_color[CAR_FRAME]);
-	glDrawArrays(GL_TRIANGLE_FAN, 4, 4);
-
-	glUniform3fv(loc_primitive_color, 1, car_color[CAR_WINDOW]);
-	glDrawArrays(GL_TRIANGLE_FAN, 8, 4);
-
-	glUniform3fv(loc_primitive_color, 1, car_color[CAR_LEFT_LIGHT]);
-	glDrawArrays(GL_TRIANGLE_FAN, 12, 4);
-
-	glUniform3fv(loc_primitive_color, 1, car_color[CAR_RIGHT_LIGHT]);
-	glDrawArrays(GL_TRIANGLE_FAN, 16, 4);
-
-	glUniform3fv(loc_primitive_color, 1, car_color[CAR_LEFT_WHEEL]);
-	glDrawArrays(GL_TRIANGLE_FAN, 20, 4);
-
-	glUniform3fv(loc_primitive_color, 1, car_color[CAR_RIGHT_WHEEL]);
-	glDrawArrays(GL_TRIANGLE_FAN, 24, 4);
 
 	glBindVertexArray(0);
 }
@@ -575,8 +291,11 @@ void draw_cocktail() {
 #define CAR2_LIGHT2 6
 
 int car2_clock;
+float car2_spawnXcor;
 float car2_Ycor = 0.0f;
+float car2_Xcor = 0.0f;
 bool car2_fallingFlag = false;
+bool car2_activeFlag = false;
 
 GLfloat car2_body[8][2] = { { -18.0, -7.0 }, { -18.0, 0.0 }, { -13.0, 0.0 }, { -10.0, 8.0 }, { 10.0, 8.0 }, { 13.0, 0.0 }, { 18.0, 0.0 }, { 18.0, -7.0 } };
 GLfloat car2_front_window[4][2] = { { -10.0, 0.0 }, { -8.0, 6.0 }, { -2.0, 6.0 }, { -2.0, 0.0 } };
@@ -653,227 +372,6 @@ void draw_car2() {
 
 	glUniform3fv(loc_primitive_color, 1, car2_color[CAR2_LIGHT2]);
 	glDrawArrays(GL_TRIANGLE_FAN, 35, 3);
-
-	glBindVertexArray(0);
-}
-
-// MODEL : HAT
-
-#define HAT_LEAF 0
-#define HAT_BODY 1
-#define HAT_STRIP 2
-#define HAT_BOTTOM 3
-
-GLfloat hat_leaf[4][2] = { { 3.0, 20.0 },{ 3.0, 28.0 },{ 9.0, 32.0 },{ 9.0, 24.0 } };
-GLfloat hat_body[4][2] = { { -19.5, 2.0 },{ 19.5, 2.0 },{ 15.0, 20.0 },{ -15.0, 20.0 } };
-GLfloat hat_strip[4][2] = { { -20.0, 0.0 },{ 20.0, 0.0 },{ 19.5, 2.0 },{ -19.5, 2.0 } };
-GLfloat hat_bottom[4][2] = { { 25.0, 0.0 },{ -25.0, 0.0 },{ -25.0, -4.0 },{ 25.0, -4.0 } };
-
-GLfloat hat_color[4][3] = {
-	{ 167 / 255.0f, 255 / 255.0f, 55 / 255.0f },
-{ 255 / 255.0f, 144 / 255.0f, 32 / 255.0f },
-{ 255 / 255.0f, 40 / 255.0f, 33 / 255.0f },
-{ 255 / 255.0f, 144 / 255.0f, 32 / 255.0f }
-};
-GLuint VBO_hat, VAO_hat;
-
-void prepare_hat() {
-	GLsizeiptr buffer_size = sizeof(hat_leaf) + sizeof(hat_body) + sizeof(hat_strip) + sizeof(hat_bottom);
-
-	// Initialize vertex buffer object.
-	glGenBuffers(1, &VBO_hat);
-
-	glBindBuffer(GL_ARRAY_BUFFER, VBO_hat);
-	glBufferData(GL_ARRAY_BUFFER, buffer_size, NULL, GL_STATIC_DRAW); // allocate buffer object memory
-
-	glBufferSubData(GL_ARRAY_BUFFER, 0, sizeof(hat_leaf), hat_leaf);
-	glBufferSubData(GL_ARRAY_BUFFER, sizeof(hat_leaf), sizeof(hat_body), hat_body);
-	glBufferSubData(GL_ARRAY_BUFFER, sizeof(hat_leaf) + sizeof(hat_body), sizeof(hat_strip), hat_strip);
-	glBufferSubData(GL_ARRAY_BUFFER, sizeof(hat_leaf) + sizeof(hat_body) + sizeof(hat_strip), sizeof(hat_bottom), hat_bottom);
-
-	// Initialize vertex array object.
-	glGenVertexArrays(1, &VAO_hat);
-	glBindVertexArray(VAO_hat);
-
-	glBindBuffer(GL_ARRAY_BUFFER, VBO_hat);
-	glVertexAttribPointer(LOC_VERTEX, 2, GL_FLOAT, GL_FALSE, 0, BUFFER_OFFSET(0));
-
-	glEnableVertexAttribArray(0);
-	glBindBuffer(GL_ARRAY_BUFFER, 0);
-	glBindVertexArray(0);
-}
-
-void draw_hat() {
-	glBindVertexArray(VAO_hat);
-
-	glUniform3fv(loc_primitive_color, 1, hat_color[HAT_LEAF]);
-	glDrawArrays(GL_TRIANGLE_FAN, 0, 4);
-
-	glUniform3fv(loc_primitive_color, 1, hat_color[HAT_BODY]);
-	glDrawArrays(GL_TRIANGLE_FAN, 4, 8);
-
-	glUniform3fv(loc_primitive_color, 1, hat_color[HAT_STRIP]);
-	glDrawArrays(GL_TRIANGLE_FAN, 8, 12);
-
-	glUniform3fv(loc_primitive_color, 1, hat_color[HAT_BOTTOM]);
-	glDrawArrays(GL_TRIANGLE_FAN, 12, 16);
-
-	glBindVertexArray(0);
-}
-
-// MODEL : CAKE
-
-#define CAKE_FIRE 0
-#define CAKE_CANDLE 1
-#define CAKE_BODY 2
-#define CAKE_BOTTOM 3
-#define CAKE_DECORATE 4
-
-GLfloat cake_fire[4][2] = { { -0.5, 14.0 },{ -0.5, 13.0 },{ 0.5, 13.0 },{ 0.5, 14.0 } };
-GLfloat cake_candle[4][2] = { { -1.0, 8.0 } ,{ -1.0, 13.0 },{ 1.0, 13.0 },{ 1.0, 8.0 } };
-GLfloat cake_body[4][2] = { { 8.0, 5.0 },{ -8.0, 5.0 } ,{ -8.0, 8.0 },{ 8.0, 8.0 } };
-GLfloat cake_bottom[4][2] = { { -10.0, 1.0 },{ -10.0, 5.0 },{ 10.0, 5.0 },{ 10.0, 1.0 } };
-GLfloat cake_decorate[4][2] = { { -10.0, 0.0 },{ -10.0, 1.0 },{ 10.0, 1.0 },{ 10.0, 0.0 } };
-
-GLfloat cake_color[5][3] = {
-	{ 255 / 255.0f, 0 / 255.0f, 0 / 255.0f },
-{ 255 / 255.0f, 204 / 255.0f, 0 / 255.0f },
-{ 255 / 255.0f, 102 / 255.0f, 255 / 255.0f },
-{ 255 / 255.0f, 102 / 255.0f, 255 / 255.0f },
-{ 102 / 255.0f, 51 / 255.0f, 0 / 255.0f }
-};
-GLuint VBO_cake, VAO_cake;
-
-void prepare_cake() {
-	int size = sizeof(cake_fire);
-	GLsizeiptr buffer_size = sizeof(cake_fire) * 5;
-
-	// Initialize vertex buffer object.
-	glGenBuffers(1, &VBO_cake);
-
-	glBindBuffer(GL_ARRAY_BUFFER, VBO_cake);
-	glBufferData(GL_ARRAY_BUFFER, buffer_size, NULL, GL_STATIC_DRAW); // allocate buffer object memory
-
-	glBufferSubData(GL_ARRAY_BUFFER, 0, size, cake_fire);
-	glBufferSubData(GL_ARRAY_BUFFER, size, size, cake_candle);
-	glBufferSubData(GL_ARRAY_BUFFER, size * 2, size, cake_body);
-	glBufferSubData(GL_ARRAY_BUFFER, size * 3, size, cake_bottom);
-	glBufferSubData(GL_ARRAY_BUFFER, size * 4, size, cake_decorate);
-
-	// Initialize vertex array object.
-	glGenVertexArrays(1, &VAO_cake);
-	glBindVertexArray(VAO_cake);
-
-	glBindBuffer(GL_ARRAY_BUFFER, VBO_cake);
-	glVertexAttribPointer(LOC_VERTEX, 2, GL_FLOAT, GL_FALSE, 0, BUFFER_OFFSET(0));
-
-	glEnableVertexAttribArray(0);
-	glBindBuffer(GL_ARRAY_BUFFER, 0);
-	glBindVertexArray(0);
-}
-
-void draw_cake() {
-	glBindVertexArray(VAO_cake);
-
-	glUniform3fv(loc_primitive_color, 1, cake_color[CAKE_FIRE]);
-	glDrawArrays(GL_TRIANGLE_FAN, 0, 4);
-
-	glUniform3fv(loc_primitive_color, 1, cake_color[CAKE_CANDLE]);
-	glDrawArrays(GL_TRIANGLE_FAN, 4, 8);
-
-	glUniform3fv(loc_primitive_color, 1, cake_color[CAKE_BODY]);
-	glDrawArrays(GL_TRIANGLE_FAN, 8, 12);
-
-	glUniform3fv(loc_primitive_color, 1, cake_color[CAKE_BOTTOM]);
-	glDrawArrays(GL_TRIANGLE_FAN, 12, 16);
-
-	glUniform3fv(loc_primitive_color, 1, cake_color[CAKE_DECORATE]);
-	glDrawArrays(GL_TRIANGLE_FAN, 16, 20);
-
-	glBindVertexArray(0);
-}
-
-// MODEL : SWORD
-
-#define SWORD_BODY 0
-#define SWORD_BODY2 1
-#define SWORD_HEAD 2
-#define SWORD_HEAD2 3
-#define SWORD_IN 4
-#define SWORD_DOWN 5
-#define SWORD_BODY_IN 6
-
-GLfloat sword_body[4][2] = { { -6.0, 0.0 },{ -6.0, -4.0 },{ 6.0, -4.0 },{ 6.0, 0.0 } };
-GLfloat sword_body2[4][2] = { { -2.0, -4.0 },{ -2.0, -6.0 } ,{ 2.0, -6.0 },{ 2.0, -4.0 } };
-GLfloat sword_head[4][2] = { { -2.0, 0.0 },{ -2.0, 16.0 } ,{ 2.0, 16.0 },{ 2.0, 0.0 } };
-GLfloat sword_head2[3][2] = { { -2.0, 16.0 },{ 0.0, 19.46 } ,{ 2.0, 16.0 } };
-GLfloat sword_in[4][2] = { { -0.3, 0.7 },{ -0.3, 15.3 } ,{ 0.3, 15.3 },{ 0.3, 0.7 } };
-GLfloat sword_down[4][2] = { { -2.0, -6.0 } ,{ 2.0, -6.0 },{ 4.0, -8.0 },{ -4.0, -8.0 } };
-GLfloat sword_body_in[4][2] = { { 0.0, -1.0 } ,{ 1.0, -2.732 },{ 0.0, -4.464 },{ -1.0, -2.732 } };
-
-GLfloat sword_color[7][3] = {
-	{ 139 / 255.0f, 69 / 255.0f, 19 / 255.0f },
-{ 139 / 255.0f, 69 / 255.0f, 19 / 255.0f },
-{ 155 / 255.0f, 155 / 255.0f, 155 / 255.0f },
-{ 155 / 255.0f, 155 / 255.0f, 155 / 255.0f },
-{ 0 / 255.0f, 0 / 255.0f, 0 / 255.0f },
-{ 139 / 255.0f, 69 / 255.0f, 19 / 255.0f },
-{ 255 / 255.0f, 0 / 255.0f, 0 / 255.0f }
-};
-
-GLuint VBO_sword, VAO_sword;
-void prepare_sword() {
-	GLsizeiptr buffer_size = sizeof(sword_body) + sizeof(sword_body2) + sizeof(sword_head) + sizeof(sword_head2) + sizeof(sword_in) + sizeof(sword_down) + sizeof(sword_body_in);
-
-	// Initialize vertex buffer object.
-	glGenBuffers(1, &VBO_sword);
-
-	glBindBuffer(GL_ARRAY_BUFFER, VBO_sword);
-	glBufferData(GL_ARRAY_BUFFER, buffer_size, NULL, GL_STATIC_DRAW); // allocate buffer object memory
-
-	glBufferSubData(GL_ARRAY_BUFFER, 0, sizeof(sword_body), sword_body);
-	glBufferSubData(GL_ARRAY_BUFFER, sizeof(sword_body), sizeof(sword_body2), sword_body2);
-	glBufferSubData(GL_ARRAY_BUFFER, sizeof(sword_body) + sizeof(sword_body2), sizeof(sword_head), sword_head);
-	glBufferSubData(GL_ARRAY_BUFFER, sizeof(sword_body) + sizeof(sword_body2) + sizeof(sword_head), sizeof(sword_head2), sword_head2);
-	glBufferSubData(GL_ARRAY_BUFFER, sizeof(sword_body) + sizeof(sword_body2) + sizeof(sword_head) + sizeof(sword_head2), sizeof(sword_in), sword_in);
-	glBufferSubData(GL_ARRAY_BUFFER, sizeof(sword_body) + sizeof(sword_body2) + sizeof(sword_head) + sizeof(sword_head2) + sizeof(sword_in), sizeof(sword_down), sword_down);
-	glBufferSubData(GL_ARRAY_BUFFER, sizeof(sword_body) + sizeof(sword_body2) + sizeof(sword_head) + sizeof(sword_head2) + sizeof(sword_in) + sizeof(sword_down), sizeof(sword_body_in), sword_body_in);
-
-	// Initialize vertex array object.
-	glGenVertexArrays(1, &VAO_sword);
-	glBindVertexArray(VAO_sword);
-
-	glBindBuffer(GL_ARRAY_BUFFER, VBO_sword);
-	glVertexAttribPointer(LOC_VERTEX, 2, GL_FLOAT, GL_FALSE, 0, BUFFER_OFFSET(0));
-
-	glEnableVertexAttribArray(0);
-	glBindBuffer(GL_ARRAY_BUFFER, 0);
-	glBindVertexArray(0);
-}
-
-void draw_sword() {
-	glBindVertexArray(VAO_sword);
-
-	glUniform3fv(loc_primitive_color, 1, sword_color[SWORD_BODY]);
-	glDrawArrays(GL_TRIANGLE_FAN, 0, 4);
-
-	glUniform3fv(loc_primitive_color, 1, sword_color[SWORD_BODY2]);
-	glDrawArrays(GL_TRIANGLE_FAN, 4, 4);
-
-	glUniform3fv(loc_primitive_color, 1, sword_color[SWORD_HEAD]);
-	glDrawArrays(GL_TRIANGLE_FAN, 8, 4);
-
-	glUniform3fv(loc_primitive_color, 1, sword_color[SWORD_HEAD2]);
-	glDrawArrays(GL_TRIANGLE_FAN, 12, 3);
-
-	glUniform3fv(loc_primitive_color, 1, sword_color[SWORD_IN]);
-	glDrawArrays(GL_TRIANGLE_FAN, 15, 4);
-
-	glUniform3fv(loc_primitive_color, 1, sword_color[SWORD_DOWN]);
-	glDrawArrays(GL_TRIANGLE_FAN, 19, 4);
-
-	glUniform3fv(loc_primitive_color, 1, sword_color[SWORD_BODY_IN]);
-	glDrawArrays(GL_TRIANGLE_FAN, 23, 4);
 
 	glBindVertexArray(0);
 }
@@ -1007,9 +505,7 @@ void draw_ground() {
 void display(void) {
 	int i;
 	float x, r, s, delx, delr, dels;
-	float winBorderR, winBorderD, winBorderL, winBorderU;
 	static float bird_Ycor = 0;
-	static float airplane_Xcor = win_width / 2.0f;
 	glm::mat4 ModelMatrix;
 
 	glClear(GL_COLOR_BUFFER_BIT);
@@ -1042,14 +538,21 @@ void display(void) {
 	if (!airplane_appearDelay) {
 		draw_airplane();
 		airplane_Xcor = winBorderR - airplane_clock;
+		if ((int) airplane_Xcor / 3 == (int) car2_spawnXcor / 3) {
+			car2_activeFlag = true;
+			car2_fallingFlag = true;
+			car2_Xcor = airplane_Xcor;
+			car2_Ycor = winBorderU - 110.0f;
+		}
 	}
 	
 	// CAR (SIDE VIEW)
+	ModelMatrix = glm::translate(glm::mat4(1.0f), glm::vec3(car2_Xcor, car2_Ycor + 14.0f, 0.0f));
 	ModelMatrix = glm::scale(ModelMatrix, glm::vec3(1.5f, 1.5f, 1.0f));
-	ModelMatrix = glm::rotate(ModelMatrix, -90.0f * TO_RADIAN, glm::vec3(0.0f, 0.0f, 1.0f));
 	ModelViewProjectionMatrix = ViewProjectionMatrix * ModelMatrix;
 	glUniformMatrix4fv(loc_ModelViewProjectionMatrix, 1, GL_FALSE, &ModelViewProjectionMatrix[0][0]);
-	//draw_car2();
+	if(car2_activeFlag)
+		draw_car2();
 
 	// HOUSE
 	for (i = 0; i < house_cnt; i++) {
@@ -1118,9 +621,6 @@ void reshape(int width, int height) {
 		-win_height / 2.0, win_height / 2.0, -1000.0, 1000.0);
 	ViewProjectionMatrix = ProjectionMatrix * ViewMatrix;
 
-	update_axes();
-	update_line();
-
 	glutPostRedisplay();
 }
 
@@ -1153,22 +653,29 @@ void timer(int value) {
 	if (!airplane_appearDelay && airplane_clock + 3 >= win_width) {
 		airplane_appearDelay = rand() % 100 + 30; // delay reappearance
 		airplane_clock = 0;
+		//car2_spawnXcor = rand() % (win_width / 2);
 	}
 	else if (airplane_appearDelay)
 		airplane_appearDelay--;
 	else
 		airplane_clock = (airplane_clock + 3) % win_width;
-	/*
+	
 	// CAR2
-	if (car2_fallingFlag && car2_clock + 3 >= win_width) {
-		car2_appearDelay = rand() % 100 + 30; // delay reappearance
-		car2_clock = 0;
+	if (car2_fallingFlag) { // decrease in y coordinate
+		car2_Ycor -= 3;
+		if (car2_Ycor <= groundLevel) { // if car meets ground
+			car2_Ycor = groundLevel;
+			if(!car2_fallingFlag)
+				car2_spawnXcor = rand() % win_width / 4;
+			car2_fallingFlag = false;
+			//car2_spawnXcor = rand() % win_width / 4.0f;
+		}
 	}
-	else if (car2_appearDelay)
-		car2_appearDelay--;
-	else
-		car2_clock = (car2_clock + 3) % win_width;
-		*/
+	car2_Xcor -= 3;
+	if (car2_activeFlag && car2_Xcor < winBorderL) {
+		car2_activeFlag = false;
+		car2_spawnXcor = rand() % win_width / 4;
+	}
 
 	// BIRD
 	if (bird_jumpFlag) {
@@ -1186,12 +693,6 @@ void timer(int value) {
 }
 
 void cleanup(void) {
-	glDeleteVertexArrays(1, &VAO_axes);
-	glDeleteBuffers(1, &VBO_axes);
-
-	glDeleteVertexArrays(1, &VAO_line);
-	glDeleteBuffers(1, &VBO_line);
-
 	glDeleteVertexArrays(1, &VAO_airplane);
 	glDeleteBuffers(1, &VBO_airplane);
 }
@@ -1227,12 +728,8 @@ void initialize_OpenGL(void) {
 }
 
 void prepare_scene(void) {
-	//prepare_axes();
-	//prepare_line();
 	prepare_airplane();
-	//prepare_shirt();
 	prepare_house();
-	//prepare_car();
 	prepare_cocktail();
 	prepare_car2();
 	prepare_bird();
@@ -1290,6 +787,9 @@ void main(int argc, char *argv[]) {
 	house_clock = rand() % INIT_WIN_WIDTH;
 	cocktail_clock = car2_clock = 0;
 
+	car2_Xcor = INIT_WIN_WIDTH;
+	car2_spawnXcor = rand() % win_width / 4;
+
 	// initialize house count
 	house_cnt = rand() % 5 + 1;
 
@@ -1308,5 +808,3 @@ void main(int argc, char *argv[]) {
 	glutSetOption(GLUT_ACTION_ON_WINDOW_CLOSE, GLUT_ACTION_GLUTMAINLOOP_RETURNS);
 	glutMainLoop ();
 }
-
-
