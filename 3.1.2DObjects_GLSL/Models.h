@@ -112,10 +112,12 @@ void draw_car2();
 
 #define BIRD_LEG1 0
 #define BIRD_LEG2 1
-#define BIRD_BODY 2
-#define BIRD_BEAK 3
-#define BIRD_EYE 4
-#define BIRD_PUPIL 5
+#define BIRD_TAIL 2
+#define BIRD_BODY 3
+#define BIRD_BEAK 4
+#define BIRD_EYE 5
+#define BIRD_PUPIL 6
+#define BIRD_WING 7
 
 extern bool bird_jumpFlag;
 extern int bird_jumpClock;
