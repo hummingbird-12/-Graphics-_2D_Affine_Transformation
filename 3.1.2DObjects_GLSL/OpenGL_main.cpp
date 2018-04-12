@@ -174,8 +174,6 @@ void reshape(int width, int height) {
 }
 
 void timer(int value) {
-	if(win_width != 1000)
-		printf("%d\n", win_width);
 	// COCKTAIL
 	if (!cocktail_appearDelay && cocktail_clock + 8 >= win_width) {
 		cocktail_appearDelay = rand() % 300 + 20; // delay reappearance
