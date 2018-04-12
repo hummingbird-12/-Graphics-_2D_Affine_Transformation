@@ -93,14 +93,6 @@ void display(void) {
 			car2_Ycor = winBorderU - 110.0f;
 		}
 	}
-	
-	// CAR (SIDE VIEW)
-	ModelMatrix = glm::translate(glm::mat4(1.0f), glm::vec3(car2_Xcor, car2_Ycor + 14.0f, 0.0f));
-	ModelMatrix = glm::scale(ModelMatrix, glm::vec3(1.5f, 1.5f, 1.0f));
-	ModelViewProjectionMatrix = ViewProjectionMatrix * ModelMatrix;
-	glUniformMatrix4fv(loc_ModelViewProjectionMatrix, 1, GL_FALSE, &ModelViewProjectionMatrix[0][0]);
-	if(car2_activeFlag)
-		draw_car2();
 
 	// HOUSE
 	for (i = 0; i < house_cnt; i++) {
@@ -112,6 +104,14 @@ void display(void) {
 		if (!house_appearDelay)
 			draw_house();
 	}
+
+	// CAR (SIDE VIEW)
+	ModelMatrix = glm::translate(glm::mat4(1.0f), glm::vec3(car2_Xcor, car2_Ycor + 14.0f, 0.0f));
+	ModelMatrix = glm::scale(ModelMatrix, glm::vec3(1.5f, 1.5f, 1.0f));
+	ModelViewProjectionMatrix = ViewProjectionMatrix * ModelMatrix;
+	glUniformMatrix4fv(loc_ModelViewProjectionMatrix, 1, GL_FALSE, &ModelViewProjectionMatrix[0][0]);
+	if(car2_activeFlag)
+		draw_car2();
 
 	// BIRD
 	for (int j = 0; j < 3; j++) {
