@@ -381,20 +381,26 @@ void draw_car2() {
 #define BIRD_JUMP_DELAY 50
 #define BIRD_ROTATE_ANGLE 70.0f
 
-#define BIRD_BODY 0
-#define BIRD_BEAK 1
-#define BIRD_EYE 2
-#define BIRD_PUPIL 3
+#define BIRD_LEG1 0
+#define BIRD_LEG2 1
+#define BIRD_BODY 2
+#define BIRD_BEAK 3
+#define BIRD_EYE 4
+#define BIRD_PUPIL 5
 
 bool bird_jumpFlag = false;
 int bird_jumpClock = 0;
 
+GLfloat bird_leg1[2][2] = { { -10.0, -20.0 }, { 0.0, 0.0 } };
+GLfloat bird_leg2[2][2] = { { 10.0, -20.0 }, { 0.0, 0.0 } };
 GLfloat bird_body[4][2] = { { -15.0, -15.0 }, { -15.0, 15.0 }, { 15.0, 15.0 }, {15.0, -15.0} };
 GLfloat bird_beak[3][2] = { { 15.0, 7.0 }, { 15.0, -7.0 }, { 30.0, 0.0 } };
 GLfloat bird_eye[1][2] = { 7.0, 7.0 };
 GLfloat bird_pupil[1][2] = { 8.0, 7.0 };
 
-GLfloat bird_color[4][3] = {
+GLfloat bird_color[6][3] = {
+	{ 0.0f, 0.0f, 0.0f },
+	{ 0.0f, 0.0f, 0.0f },
 	{ 255.0f / 255.0f, 0.0f / 255.0f, 0.0f / 255.0f },
 	{ 255.0f / 255.0f, 200.0f / 255.0f, 0.0f / 255.0f },
 	{ 255.0f / 255.0f, 255.0f / 255.0f, 255.0f / 255.0f },
@@ -403,7 +409,7 @@ GLfloat bird_color[4][3] = {
 
 GLuint VBO_bird, VAO_bird;
 void prepare_bird() {
-	GLsizeiptr buffer_size = sizeof(bird_body) + sizeof(bird_beak) + sizeof(bird_eye) + sizeof(bird_pupil);
+	GLsizeiptr buffer_size = sizeof(bird_leg1) + sizeof(bird_leg2) + sizeof(bird_body) + sizeof(bird_beak) + sizeof(bird_eye) + sizeof(bird_pupil);
 
 	// Initialize vertex buffer object.
 	glGenBuffers(1, &VBO_bird);
@@ -411,10 +417,12 @@ void prepare_bird() {
 	glBindBuffer(GL_ARRAY_BUFFER, VBO_bird);
 	glBufferData(GL_ARRAY_BUFFER, buffer_size, NULL, GL_STATIC_DRAW); // allocate buffer object memory
 
-	glBufferSubData(GL_ARRAY_BUFFER, 0, sizeof(bird_body), bird_body);
-	glBufferSubData(GL_ARRAY_BUFFER, sizeof(bird_body), sizeof(bird_beak), bird_beak);
-	glBufferSubData(GL_ARRAY_BUFFER, sizeof(bird_body) + sizeof(bird_beak), sizeof(bird_eye), bird_eye);
-	glBufferSubData(GL_ARRAY_BUFFER, sizeof(bird_body) + sizeof(bird_beak) + sizeof(bird_eye), sizeof(bird_pupil), bird_pupil);
+	glBufferSubData(GL_ARRAY_BUFFER, 0, sizeof(bird_leg1), bird_leg1);
+	glBufferSubData(GL_ARRAY_BUFFER, sizeof(bird_leg1), sizeof(bird_leg2), bird_leg2);
+	glBufferSubData(GL_ARRAY_BUFFER, sizeof(bird_leg1) + sizeof(bird_leg2), sizeof(bird_body), bird_body);
+	glBufferSubData(GL_ARRAY_BUFFER, sizeof(bird_leg1) + sizeof(bird_leg2) + sizeof(bird_body), sizeof(bird_beak), bird_beak);
+	glBufferSubData(GL_ARRAY_BUFFER, sizeof(bird_leg1) + sizeof(bird_leg2) + sizeof(bird_body) + sizeof(bird_beak), sizeof(bird_eye), bird_eye);
+	glBufferSubData(GL_ARRAY_BUFFER, sizeof(bird_leg1) + sizeof(bird_leg2) + sizeof(bird_body) + sizeof(bird_beak) + sizeof(bird_eye), sizeof(bird_pupil), bird_pupil);
 
 	// Initialize vertex array object.
 	glGenVertexArrays(1, &VAO_bird);
@@ -431,20 +439,27 @@ void prepare_bird() {
 void draw_bird() {
 	glBindVertexArray(VAO_bird);
 
+	glUniform3fv(loc_primitive_color, 1, bird_color[BIRD_LEG1]);
+	glLineWidth(2.0);
+	glDrawArrays(GL_LINES, 0, 2);
+
+	glUniform3fv(loc_primitive_color, 1, bird_color[BIRD_LEG2]);
+	glDrawArrays(GL_LINES, 2, 2);
+
 	glUniform3fv(loc_primitive_color, 1, bird_color[BIRD_BODY]);
-	glDrawArrays(GL_TRIANGLE_FAN, 0, 4);
+	glDrawArrays(GL_TRIANGLE_FAN, 4, 4);
 
 	glUniform3fv(loc_primitive_color, 1, bird_color[BIRD_BEAK]);
-	glDrawArrays(GL_TRIANGLE_FAN, 4, 3);
+	glDrawArrays(GL_TRIANGLE_FAN, 8, 3);
 
 	glUniform3fv(loc_primitive_color, 1, bird_color[BIRD_EYE]);
 	glPointSize(10.0);
-	glDrawArrays(GL_POINTS, 7, 1);
+	glDrawArrays(GL_POINTS, 11, 1);
 	glPointSize(1.0);
 
 	glUniform3fv(loc_primitive_color, 1, bird_color[BIRD_PUPIL]);
 	glPointSize(4.0);
-	glDrawArrays(GL_POINTS, 8, 1);
+	glDrawArrays(GL_POINTS, 12, 1);
 	glPointSize(1.0);
 
 	glBindVertexArray(0);
@@ -566,31 +581,32 @@ void display(void) {
 	}
 
 	// BIRD
-	ModelMatrix = glm::translate(glm::mat4(1.0f), glm::vec3(winBorderL + 150.0f, 0.0f, 0.0f));
-	if (bird_jumpClock) { // bird is jumping
-		if (bird_jumpClock >= BIRD_JUMP_DELAY / 2) { // ascending
-			bird_Ycor += bird_Ycor + 17.0f <= winBorderU ? 2.0f : 0.0f; // sky is the limit
-			ModelMatrix = glm::translate(ModelMatrix, glm::vec3(0.0f, bird_Ycor, 0.0f));
-			// smooth rotating upwards while ascending
-			ModelMatrix = glm::rotate(ModelMatrix, (BIRD_ROTATE_ANGLE - bird_jumpClock) * TO_RADIAN, glm::vec3(0.0f, 0.0f, 1.0f));
+	for (int j = 0; j < 3; j++) {
+		ModelMatrix = glm::translate(glm::mat4(1.0f), glm::vec3(winBorderL + 150.0f - j * 40.0f, 0.0f, 0.0f));
+		if (bird_jumpClock) { // bird is jumping
+			if (bird_jumpClock >= BIRD_JUMP_DELAY / 2) { // ascending
+				bird_Ycor += bird_Ycor + 17.0f <= winBorderU ? 2.0f : 0.0f; // sky is the limit
+				ModelMatrix = glm::translate(ModelMatrix, glm::vec3(0.0f, bird_Ycor - j * 5.0f, 0.0f));
+				// smooth rotating upwards while ascending
+				ModelMatrix = glm::rotate(ModelMatrix, (BIRD_ROTATE_ANGLE - bird_jumpClock) * TO_RADIAN, glm::vec3(0.0f, 0.0f, 1.0f));
+			}
+			else { // descending
+				bird_Ycor -= bird_Ycor - 17.0f >= groundLevel ? 1.5f : 0.0f; // check ground level
+				ModelMatrix = glm::translate(ModelMatrix, glm::vec3(0.0f, bird_Ycor + j * 5.0f, 0.0f));
+				// smooth rotating downwards while descending
+				ModelMatrix = glm::rotate(ModelMatrix, (-BIRD_ROTATE_ANGLE + bird_jumpClock) * TO_RADIAN, glm::vec3(0.0f, 0.0f, 1.0f));
+			}
 		}
-		else { // descending
+		else { // bird is NOT jumping, so descend
 			bird_Ycor -= bird_Ycor - 17.0f >= groundLevel ? 1.5f : 0.0f; // check ground level
-			ModelMatrix = glm::translate(ModelMatrix, glm::vec3(0.0f, bird_Ycor, 0.0f));
-			// smooth rotating downwards while descending
-			ModelMatrix = glm::rotate(ModelMatrix, (-BIRD_ROTATE_ANGLE + bird_jumpClock) * TO_RADIAN, glm::vec3(0.0f, 0.0f, 1.0f));
+			ModelMatrix = glm::translate(ModelMatrix, glm::vec3(0.0f, bird_Ycor + j * 5.0f, 0.0f));
+			// rotate downwards while descending
+			ModelMatrix = glm::rotate(ModelMatrix, -BIRD_ROTATE_ANGLE * TO_RADIAN, glm::vec3(0.0f, 0.0f, 1.0f));
 		}
+		ModelViewProjectionMatrix = ViewProjectionMatrix * ModelMatrix;
+		glUniformMatrix4fv(loc_ModelViewProjectionMatrix, 1, GL_FALSE, &ModelViewProjectionMatrix[0][0]);
+		draw_bird();
 	}
-	else { // bird is NOT jumping, so descend
-		bird_Ycor -= bird_Ycor - 17.0f >= groundLevel ? 1.5f : 0.0f; // check ground level
-		ModelMatrix = glm::translate(ModelMatrix, glm::vec3(0.0f, bird_Ycor, 0.0f));
-		// rotate downwards while descending
-		ModelMatrix = glm::rotate(ModelMatrix, -BIRD_ROTATE_ANGLE * TO_RADIAN, glm::vec3(0.0f, 0.0f, 1.0f));
-	}
-	ModelViewProjectionMatrix = ViewProjectionMatrix * ModelMatrix;
-	glUniformMatrix4fv(loc_ModelViewProjectionMatrix, 1, GL_FALSE, &ModelViewProjectionMatrix[0][0]);
-	draw_bird();
-
 
 	// GROUND
 	ModelMatrix = glm::translate(glm::mat4(1.0f), glm::vec3(0.0f, winBorderD + 50.0f, 0.0f));
@@ -640,7 +656,7 @@ void timer(int value) {
 	if (!house_appearDelay && house_clock + 3 >= win_width + 120 * MAX_HOUSE_CNT) {
 		house_appearDelay = rand() % 100 + 30; // delay reappearance
 		house_clock = 0;
-		house_cnt = rand() % MAX_HOUSE_CNT + 1; // generate house count for new wave
+		house_cnt = rand() % (MAX_HOUSE_CNT - 5) + 6; // generate house count for new wave
 		for (int i = 0; i < house_cnt; i++)
 			house_offset[i] = rand() % 5 + 1; // size of each house in wave
 	}
@@ -653,7 +669,6 @@ void timer(int value) {
 	if (!airplane_appearDelay && airplane_clock + 3 >= win_width) {
 		airplane_appearDelay = rand() % 100 + 30; // delay reappearance
 		airplane_clock = 0;
-		//car2_spawnXcor = rand() % (win_width / 2);
 	}
 	else if (airplane_appearDelay)
 		airplane_appearDelay--;
@@ -665,16 +680,13 @@ void timer(int value) {
 		car2_Ycor -= 3;
 		if (car2_Ycor <= groundLevel) { // if car meets ground
 			car2_Ycor = groundLevel;
-			if(!car2_fallingFlag)
-				car2_spawnXcor = rand() % win_width / 4;
 			car2_fallingFlag = false;
-			//car2_spawnXcor = rand() % win_width / 4.0f;
 		}
 	}
 	car2_Xcor -= 3;
 	if (car2_activeFlag && car2_Xcor < winBorderL) {
 		car2_activeFlag = false;
-		car2_spawnXcor = rand() % win_width / 4;
+		car2_spawnXcor = rand() % win_width / 2;
 	}
 
 	// BIRD
@@ -788,10 +800,12 @@ void main(int argc, char *argv[]) {
 	cocktail_clock = car2_clock = 0;
 
 	car2_Xcor = INIT_WIN_WIDTH;
-	car2_spawnXcor = rand() % win_width / 4;
+	car2_spawnXcor = rand() % win_width / 2;
 
 	// initialize house count
-	house_cnt = rand() % 5 + 1;
+	house_cnt = rand() % (MAX_HOUSE_CNT - 5) + 6;
+	for (int i = 0; i < house_cnt; i++)
+		house_offset[i] = rand() % 5 + 1; // size of each house in wave
 
 	airplane_appearDelay = house_appearDelay = cocktail_appearDelay = 0;
 
