@@ -339,7 +339,7 @@ void main(int argc, char *argv[]) {
 
 	// initialize object coordinates
 	car2_Ycor = car2_Xcor = 0.0f;
-	car2_spawnXcor = rand() % win_width / 2;
+	car2_spawnXcor = (rand() % ((int) win_width / 2)) - (int)(win_width / 2);
 
 	airplane_Xcor = win_width / 2.0f;
 	airplane_s_factor = 1.0f;
