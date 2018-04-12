@@ -18,12 +18,33 @@
     <ClCompile Include="Shaders\LoadShaders.cpp">
       <Filter>소스 파일</Filter>
     </ClCompile>
-    <ClCompile Include="3.1.2DObjects_GLSL.cpp">
+    <ClCompile Include="model_House.cpp">
+      <Filter>소스 파일</Filter>
+    </ClCompile>
+    <ClCompile Include="model_Car.cpp">
+      <Filter>소스 파일</Filter>
+    </ClCompile>
+    <ClCompile Include="model_Cocktail.cpp">
+      <Filter>소스 파일</Filter>
+    </ClCompile>
+    <ClCompile Include="model_Airplane.cpp">
+      <Filter>소스 파일</Filter>
+    </ClCompile>
+    <ClCompile Include="model_Bird.cpp">
+      <Filter>소스 파일</Filter>
+    </ClCompile>
+    <ClCompile Include="model_Ground.cpp">
+      <Filter>소스 파일</Filter>
+    </ClCompile>
+    <ClCompile Include="OpenGL_main.cpp">
       <Filter>소스 파일</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="Shaders\LoadShaders.h">
+      <Filter>헤더 파일</Filter>
+    </ClInclude>
+    <ClInclude Include="Models.h">
       <Filter>헤더 파일</Filter>
     </ClInclude>
   </ItemGroup>
