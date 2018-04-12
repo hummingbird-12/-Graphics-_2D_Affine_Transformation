@@ -23,8 +23,8 @@ glm::mat4 ViewMatrix, ProjectionMatrix, ViewProjectionMatrix;
 #define INIT_WIN_WIDTH 1000
 #define INIT_WIN_HEIGHT 600
 
-int win_width = INIT_WIN_WIDTH, win_height = INIT_WIN_HEIGHT; 
-float centerx = 0.0f, centery = 0.0f, rotate_angle = 0.0f;
+int win_width, win_height;
+float centerx, centery, rotate_angle;
 float winBorderR, winBorderD, winBorderL, winBorderU;
 float groundLevel;
 
@@ -38,10 +38,10 @@ float groundLevel;
 #define AIRPLANE_SIDEWINDER2 5
 #define AIRPLANE_CENTER 6
 
-float airplane_Xcor = win_width / 2.0f;
+float airplane_Xcor;
 int airplane_clock;
 int airplane_appearDelay;
-float airplane_s_factor = 1.0f;
+float airplane_s_factor;
 
 GLfloat big_wing[6][2] = { { 0.0, 0.0 }, { -20.0, 15.0 }, { -20.0, 20.0 }, { 0.0, 23.0 }, { 20.0, 20.0 }, { 20.0, 15.0 } };
 GLfloat small_wing[6][2] = { { 0.0, -18.0 }, { -11.0, -12.0 }, { -12.0, -7.0 }, { 0.0, -10.0 }, { 12.0, -7.0 }, { 11.0, -12.0 } };
@@ -136,7 +136,7 @@ void draw_airplane() { // Draw airplane in its MC.
 int house_appearDelay;
 int house_clock;
 int house_cnt;
-float house_offset[MAX_HOUSE_CNT] = { 2.0f };
+float house_offset[MAX_HOUSE_CNT];
 
 GLfloat roof[3][2] = { { -12.0, 0.0 }, { 0.0, 12.0 }, { 12.0, 0.0 } };
 GLfloat house_body[4][2] = { { -12.0, -14.0 }, { -12.0, 0.0 }, { 12.0, 0.0 }, { 12.0, -14.0 } };
@@ -292,10 +292,10 @@ void draw_cocktail() {
 
 int car2_clock;
 float car2_spawnXcor;
-float car2_Ycor = 0.0f;
-float car2_Xcor = 0.0f;
-bool car2_fallingFlag = false;
-bool car2_activeFlag = false;
+float car2_Ycor;
+float car2_Xcor;
+bool car2_fallingFlag;
+bool car2_activeFlag;
 
 GLfloat car2_body[8][2] = { { -18.0, -7.0 }, { -18.0, 0.0 }, { -13.0, 0.0 }, { -10.0, 8.0 }, { 10.0, 8.0 }, { 13.0, 0.0 }, { 18.0, 0.0 }, { 18.0, -7.0 } };
 GLfloat car2_front_window[4][2] = { { -10.0, 0.0 }, { -8.0, 6.0 }, { -2.0, 6.0 }, { -2.0, 0.0 } };
@@ -388,8 +388,8 @@ void draw_car2() {
 #define BIRD_EYE 4
 #define BIRD_PUPIL 5
 
-bool bird_jumpFlag = false;
-int bird_jumpClock = 0;
+bool bird_jumpFlag;
+int bird_jumpClock;
 
 GLfloat bird_leg1[2][2] = { { -10.0, -20.0 }, { 0.0, 0.0 } };
 GLfloat bird_leg2[2][2] = { { 10.0, -20.0 }, { 0.0, 0.0 } };
@@ -641,20 +641,22 @@ void reshape(int width, int height) {
 }
 
 void timer(int value) {
+	if(win_width != 1000)
+		printf("%d\n", win_width);
 	// COCKTAIL
-	if (!cocktail_appearDelay && cocktail_clock + 3 >= win_width) {
-		cocktail_appearDelay = rand() % 500 + 70; // delay reappearance
+	if (!cocktail_appearDelay && cocktail_clock + 8 >= win_width) {
+		cocktail_appearDelay = rand() % 300 + 20; // delay reappearance
 		cocktail_clock = 0;
 		cocktail_Xcor = (rand() % (win_height / 3)) - (win_height / 6);
 	}
 	else if (cocktail_appearDelay)
 		cocktail_appearDelay--;
 	else
-		cocktail_clock = (cocktail_clock + 3) % win_width;
+		cocktail_clock = (cocktail_clock + 8) % win_width;
 
 	// HOUSE
 	if (!house_appearDelay && house_clock + 3 >= win_width + 120 * MAX_HOUSE_CNT) {
-		house_appearDelay = rand() % 100 + 30; // delay reappearance
+		house_appearDelay = rand() % 30;// +30; // delay reappearance
 		house_clock = 0;
 		house_cnt = rand() % (MAX_HOUSE_CNT - 5) + 6; // generate house count for new wave
 		for (int i = 0; i < house_cnt; i++)
@@ -677,7 +679,7 @@ void timer(int value) {
 	
 	// CAR2
 	if (car2_fallingFlag) { // decrease in y coordinate
-		car2_Ycor -= 3;
+		car2_Ycor -= 4;
 		if (car2_Ycor <= groundLevel) { // if car meets ground
 			car2_Ycor = groundLevel;
 			car2_fallingFlag = false;
@@ -686,7 +688,7 @@ void timer(int value) {
 	car2_Xcor -= 3;
 	if (car2_activeFlag && car2_Xcor < winBorderL) {
 		car2_activeFlag = false;
-		car2_spawnXcor = rand() % win_width / 2;
+		car2_spawnXcor = (rand() % (win_width / 3)) - (win_width * 2 / 3);
 	}
 
 	// BIRD
@@ -794,13 +796,21 @@ void main(int argc, char *argv[]) {
 
 	srand(time(NULL));
 
+	centerx = centery = rotate_angle = 0.0f;
+	win_width = INIT_WIN_WIDTH;
+	win_height = INIT_WIN_HEIGHT;
+
 	// initialize location clock for each object
 	airplane_clock = rand() % INIT_WIN_WIDTH;
 	house_clock = rand() % INIT_WIN_WIDTH;
 	cocktail_clock = car2_clock = 0;
 
-	car2_Xcor = INIT_WIN_WIDTH;
+	// initialize object coordinates
+	car2_Ycor = car2_Xcor = 0.0f;
 	car2_spawnXcor = rand() % win_width / 2;
+
+	airplane_Xcor = win_width / 2.0f;
+	airplane_s_factor = 1.0f;
 
 	// initialize house count
 	house_cnt = rand() % (MAX_HOUSE_CNT - 5) + 6;
