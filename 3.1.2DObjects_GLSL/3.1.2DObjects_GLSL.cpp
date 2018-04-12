@@ -686,9 +686,9 @@ void timer(int value) {
 		}
 	}
 	car2_Xcor -= 3;
-	if (car2_activeFlag && car2_Xcor < winBorderL) {
+	if (car2_activeFlag && car2_Xcor < winBorderL) { // if car leaves window
 		car2_activeFlag = false;
-		car2_spawnXcor = (rand() % (win_width / 3)) - (win_width * 2 / 3);
+		car2_spawnXcor = (rand() % ((int) winBorderR / 2)) - (int) (winBorderR / 2);
 	}
 
 	// BIRD
@@ -777,8 +777,8 @@ void initialize_glew(void) {
 void greetings(char *program_name, char messages[][256], int n_message_lines) {
 	fprintf(stdout, "**************************************************************\n\n");
 	fprintf(stdout, "  PROGRAM NAME: %s\n\n", program_name);
-	fprintf(stdout, "    This program was coded for CSE4170 students\n");
-	fprintf(stdout, "      of Dept. of Comp. Sci. & Eng., Sogang University.\n\n");
+	fprintf(stdout, "  STUDENT NAME: INHO KIM\n");
+	fprintf(stdout, "  STUDENT ID:	 20161577\n\n");
 
 	for (int i = 0; i < n_message_lines; i++)
 		fprintf(stdout, "%s\n", messages[i]);
@@ -787,11 +787,12 @@ void greetings(char *program_name, char messages[][256], int n_message_lines) {
 	initialize_glew();
 }
 
-#define N_MESSAGE_LINES 1
+#define N_MESSAGE_LINES 2
 void main(int argc, char *argv[]) {
-	char program_name[64] = "Sogang CSE4170 2DObjects_GLSL_3.1";
+	char program_name[64] = "[GRAPHICS] Programming Homework #1";
 	char messages[N_MESSAGE_LINES][256] = {
-		"    - Keys used: 'ESC' "
+		"    - Keys used:	'ESC'	: End program",
+		"					'SPACE' : Jump"
 	};
 
 	srand(time(NULL));
